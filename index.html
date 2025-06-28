@@ -27,19 +27,18 @@
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-// Remplace bien par ta clé anon publique complète
-const supabase = createClient('https://nqrtrpsommuudwoakgcp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M');
+const supabase = createClient(
+  'https://nqrtrpsommuudwoakgcp.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M'
+);
 
-// Références DOM
 const loginContainer = document.getElementById('loginContainer');
 const messageEl = document.getElementById('message');
 
-// Dark mode toggle
 document.getElementById('themeToggle').addEventListener('click', () => {
   document.body.classList.toggle('dark');
 });
 
-// Check session on load
 async function checkSession() {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
@@ -47,12 +46,11 @@ async function checkSession() {
   }
 }
 
-// Connexion form
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  messageEl.textContent = "";
+  messageEl.textContent = "⏳ Vérification de l'accès en cours...";
   messageEl.className = "message";
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -65,13 +63,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   }
 });
 
-// Appelle le Worker avec le token
 async function fetchSecureContent(token) {
-  messageEl.textContent = "⏳ Vérification de l'accès en cours...";
   const response = await fetch('https://secure.alexandrelanglois.me', {
+    method: 'GET',
     headers: {
-      authorization: `Bearer ${token}`
-    }
+      'authorization': `Bearer ${token}`
+    },
+    mode: 'cors',
+    credentials: 'include'
   });
 
   if (response.ok) {
