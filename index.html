@@ -2,8 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mon Drive</title>
-  <!-- Supabase CDN pour l'authentification -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.3/dist/supabase.min.js"></script>
   <style>
     body {
@@ -41,8 +41,10 @@
     }
     .message {
       margin-top: 15px;
-      color: red;
       font-size: 14px;
+    }
+    .error {
+      color: red;
     }
     .success {
       color: green;
@@ -51,23 +53,18 @@
 </head>
 <body>
 
-  <!-- Formulaire de connexion -->
-  <div class="login-container">
+  <div class="container">
     <h1>Connecte-toi à ton Espace Privé</h1>
     
     <form id="loginForm">
-      <input type="email" id="username" placeholder="Email" required />
-      <br/>
+      <input type="email" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Mot de passe" required />
-      <br/>
-      <button type="submit">Se connecter</button>
+      <button type="submit" id="loginButton">Se connecter</button>
     </form>
 
-    <!-- Message d'erreur ou confirmation -->
-    <p id="loginMessage"></p>
+    <p id="loginMessage" class="message"></p>
   </div>
 
-  <!-- Script JavaScript (chargé à la fin du body) -->
   <script src="app.js"></script>
 </body>
 </html>
