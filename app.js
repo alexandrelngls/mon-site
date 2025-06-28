@@ -10,13 +10,12 @@ async function seConnecter() {
   const messageEl = document.getElementById('loginMessage');
   const button = document.getElementById('loginButton');
 
-  // Réinitialisation des messages et état
+  // Réinitialisation du message
   messageEl.textContent = "";
   messageEl.className = "message";
   button.disabled = true;
 
-  console.log("Tentative de connexion...");
-  console.log("Email saisi :", email);
+  console.log("Tentative de connexion avec l'email :", email);
 
   if (!email || !password) {
     messageEl.textContent = "❌ Veuillez remplir tous les champs !";
@@ -34,28 +33,29 @@ async function seConnecter() {
     console.log("Réponse Supabase :", data, error);
 
     if (error) {
-      throw new Error(error.message);
+      throw error;
     }
 
     if (data && data.user) {
       messageEl.textContent = "✅ Connecté avec succès ! 🎉";
       messageEl.classList.add("success");
-      // Exemple : window.location.href = 'drive.html';
+      // Exemple : redirection possible
+      // window.location.href = 'drive.html';
     } else {
-      messageEl.textContent = "❌ Erreur : utilisateur non trouvé.";
+      messageEl.textContent = "❌ Identifiants incorrects.";
       messageEl.classList.add("error");
     }
 
   } catch (err) {
     console.error("Erreur attrapée :", err);
-    messageEl.textContent = "❌ Erreur de connexion : " + err.message;
+    messageEl.textContent = "❌ Erreur : " + err.message;
     messageEl.classList.add("error");
   } finally {
     button.disabled = false;
   }
 }
 
-// Listener
+// Écouteur d'événement
 document.getElementById('loginForm').addEventListener('submit', async (event) => {
   event.preventDefault();
   console.log("Formulaire soumis");
