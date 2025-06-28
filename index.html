@@ -1,33 +1,64 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mon Site Sécurisé</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Mon Espace Privé</title>
+  <!-- Supabase CDN pour l'authentification -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.3/dist/supabase.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 50px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .message {
+      margin-top: 15px;
+      color: red;
+      font-size: 14px;
+    }
+    .success {
+      color: green;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Zone de connexion -->
-  <div id="auth">
-    <input type="text" id="username" placeholder="Nom d'utilisateur" />
-    <input type="password" id="password" placeholder="Mot de passe" />
-    <button onclick="seConnecter()">Se connecter</button>
-  </div>
+<div class="container">
+  <h2>Connecte-toi à ton espace privé</h2>
+  <input type="email" id="username" placeholder="Email">
+  <input type="password" id="password" placeholder="Mot de passe">
+  <button onclick="seConnecter()">Se connecter</button>
+  <div class="message" id="loginMessage"></div>
+</div>
 
-  <!-- Zone d'upload -->
-  <div id="drive" style="display:none;">
-    <h2>Votre drive 📁</h2>
-    <input type="file" id="fichier" />
-    <button onclick="telechargerFichier()">Uploader</button>
-    <ul id="listeFichiers"></ul>
-  </div>
-
-  <!-- Fichier JavaScript -->
-  <script src="app.js"></script>
-  <!-- Supabase CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/main.min.js"></script>
-
-<!-- Ton code JavaScript (app.js) -->
 <script src="app.js"></script>
 
 </body>
