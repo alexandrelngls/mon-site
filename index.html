@@ -34,6 +34,7 @@ const supabase = createClient(
 
 const loginContainer = document.getElementById('loginContainer');
 const messageEl = document.getElementById('message');
+const button = document.querySelector('#loginForm button');
 
 document.getElementById('themeToggle').addEventListener('click', () => {
   document.body.classList.toggle('dark');
@@ -52,14 +53,17 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const password = document.getElementById('password').value;
   messageEl.textContent = "⏳ Vérification de l'accès en cours...";
   messageEl.className = "message";
+  button.disabled = true;
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     messageEl.textContent = "❌ Erreur : " + error.message;
     messageEl.classList.add("error");
+    button.disabled = false;
   } else {
     await fetchSecureContent(data.session.access_token);
+    button.disabled = false;
   }
 });
 
@@ -69,9 +73,7 @@ async function fetchSecureContent(token) {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`
-      },
-      mode: 'cors',
-      credentials: 'include'
+      }
     });
 
     if (response.ok) {
