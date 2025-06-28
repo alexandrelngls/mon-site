@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Mon Espace Privé</title>
+  <title>Mon Drive</title>
   <!-- Supabase CDN pour l'authentification -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.3/dist/supabase.min.js"></script>
   <style>
@@ -51,16 +51,23 @@
 </head>
 <body>
 
-<div class="container">
-  <h2>Connecte-toi à ton espace privé</h2>
-  <input type="email" id="username" placeholder="Email">
-  <input type="password" id="password" placeholder="Mot de passe">
-  <button onclick="seConnecter()">Se connecter</button>
-  <div class="message" id="loginMessage"></div>
-</div>
+  <!-- Formulaire de connexion -->
+  <div class="login-container">
+    <h1>Connecte-toi à ton Espace Privé</h1>
+    
+    <form id="loginForm">
+      <input type="email" id="username" placeholder="Email" required />
+      <br/>
+      <input type="password" id="password" placeholder="Mot de passe" required />
+      <br/>
+      <button type="submit">Se connecter</button>
+    </form>
 
-<!-- ✅ Le script doit être ici, à la fin du body -->
-<script src="app.js"></script>
+    <!-- Message d'erreur ou confirmation -->
+    <p id="loginMessage"></p>
+  </div>
 
+  <!-- Script JavaScript (chargé à la fin du body) -->
+  <script src="app.js"></script>
 </body>
 </html>
