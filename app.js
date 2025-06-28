@@ -1,57 +1,25 @@
-// Configuration Firebase
-const firebaseConfig = {
-  apiKey: "TON_API_KEY",
-  authDomain: "ton-projet.firebaseapp.com",
-  projectId: "ton-projet",
-};
-firebase.initializeApp(firebaseConfig);
+// Fichier app.js (modifié pour utiliser Supabase)
+const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-const auth = firebase.auth();
-const storage = firebase.storage();
-
+// Fonction de connexion
 function seConnecter() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const user = document.getElementById("username").value;
+  const pwd = document.getElementById("password").value;
 
-  auth.signInWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      alert("Connecté ! 🎉");
-      document.getElementById("auth").style.display = "none";
-      document.getElementById("drive").style.display = "block";
-    })
-    .catch((error) => {
-      alert("Erreur : " + error.message);
-    });
-}
+  // Utilise Supabase pour connecter l'utilisateur
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: user,
+    password: pwd
+  });
 
-function telechargerFichier() {
-  const fileInput = document.getElementById("fichier");
-  const file = fileInput.files[0];
-
-  if (!file) {
-    alert("Veuillez sélectionner un fichier !");
-    return;
+  if (error) {
+    alert("Erreur de connexion !");
+    console.error(error);
+  } else {
+    alert("Connecté avec succès ! 🎉");
+    document.getElementById("auth").style.display = "none";
+    document.getElementById("drive").style.display = "block";
   }
-
-  const storageRef = storage.ref().child("uploads/" + file.name);
-  storageRef.put(file).then((snapshot) => {
-    console.log("Fichier uploadé !", snapshot);
-    afficherFichiers();
-  });
-}
-
-function afficherFichiers() {
-  const liste = document.getElementById("listeFichiers");
-  liste.innerHTML = "";
-
-  const storageRef = storage.ref().child("uploads/");
-  storageRef.listAll().then((res) => {
-    res.items.forEach((item) => {
-      item.getMetadata().then((metadata) => {
-        const li = document.createElement("li");
-        li.textContent = item.name;
-        liste.appendChild(li);
-      });
-    });
-  });
 }
