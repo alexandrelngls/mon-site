@@ -26,6 +26,8 @@
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+// Remplace bien '...' par ta clé anon publique complète
 const supabase = createClient('https://nqrtrpsommuudwoakgcp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
 
 // Références DOM
@@ -41,6 +43,7 @@ document.getElementById('themeToggle').addEventListener('click', () => {
 async function checkSession() {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {
+    messageEl.textContent = "⏳ Vérification de l'accès en cours...";
     await fetchSecureContent(session.access_token);
   }
 }
@@ -59,8 +62,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     messageEl.textContent = "❌ Erreur : " + error.message;
     messageEl.classList.add("error");
   } else {
-    messageEl.textContent = "✅ Connecté avec succès ! 🎉";
-    messageEl.classList.add("success");
+    messageEl.textContent = "⏳ Connexion réussie, chargement de votre espace sécurisé...";
     await fetchSecureContent(data.session.access_token);
   }
 });
@@ -75,15 +77,15 @@ async function fetchSecureContent(token) {
 
   if (response.ok) {
     const html = await response.text();
-    document.documentElement.innerHTML = html; // remplace tout le contenu par celui du Worker
+    document.open();
+    document.write(html);
+    document.close();
   } else {
     messageEl.textContent = "❌ Accès refusé par le serveur.";
     messageEl.classList.add("error");
   }
 }
 
-// Logout ne sera plus nécessaire ici car le Worker sert directement la page
-// Mais tu peux garder un logout côté Supabase si tu veux gérer la session client
 checkSession();
 </script>
 
