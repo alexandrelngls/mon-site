@@ -64,22 +64,28 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 });
 
 async function fetchSecureContent(token) {
-  const response = await fetch('https://secure.alexandrelanglois.me', {
-    method: 'GET',
-    headers: {
-      'authorization': `Bearer ${token}`
-    },
-    mode: 'cors',
-    credentials: 'include'
-  });
+  try {
+    const response = await fetch('https://secure.alexandrelanglois.me/', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      mode: 'cors',
+      credentials: 'include'
+    });
 
-  if (response.ok) {
-    const html = await response.text();
-    document.open();
-    document.write(html);
-    document.close();
-  } else {
-    messageEl.textContent = "❌ Accès refusé par le serveur.";
+    if (response.ok) {
+      const html = await response.text();
+      document.open();
+      document.write(html);
+      document.close();
+    } else {
+      messageEl.textContent = "❌ Accès refusé par le serveur.";
+      messageEl.classList.add("error");
+    }
+  } catch (err) {
+    console.error('Erreur lors de la requête au Worker:', err);
+    messageEl.textContent = "❌ Erreur réseau ou serveur.";
     messageEl.classList.add("error");
   }
 }
