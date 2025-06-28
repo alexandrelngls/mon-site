@@ -1,11 +1,31 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Mon site</title>
+  <meta charset="UTF-8" />
+  <title>Mon Site Sécurisé</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-Je t'aime mon chéri  <h1>Bienvenue sur mon site !</h1>
-  <p>Site en construction 🚧</p>
+  <h1>Drive 🛡️</h1>
+
+  <!-- Zone de connexion -->
+  <div id="auth">
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Mot de passe" />
+    <button onclick="seConnecter()">Se connecter</button>
+  </div>
+
+  <!-- Zone d'upload -->
+  <div id="drive" style="display:none;">
+    <h2>Ton drive 📁</h2>
+    <input type="file" id="fichier" />
+    <button onclick="telechargerFichier()">Uploader</button>
+    <ul id="listeFichiers"></ul>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
