@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mon Cloud Privé</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <button id="themeToggle">🌙</button>
 
   <div class="container" id="loginContainer">
     <h1>Connexion privée</h1>
@@ -19,7 +21,7 @@
   </div>
 
   <div class="dashboard" id="dashboard">
-    <h1>Bienvenue dans votre espace privé</h1>
+    <h1 id="welcome"></h1>
     <div class="apps">
       <div class="app">📁 Drive</div>
       <div class="app">📝 Notes</div>
@@ -37,17 +39,28 @@
     const loginContainer = document.getElementById('loginContainer');
     const dashboard = document.getElementById('dashboard');
     const messageEl = document.getElementById('message');
+    const welcomeEl = document.getElementById('welcome');
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+    });
+
+    function getWelcomeMessage() {
+      const hour = new Date().getHours();
+      return (hour >= 8 && hour < 18) ? 'Bonjour Alexandre' : 'Bonsoir Alexandre';
+    }
+
+    function showDashboard() {
+      loginContainer.style.display = 'none';
+      dashboard.style.display = 'flex';
+      welcomeEl.textContent = getWelcomeMessage();
+    }
 
     async function checkSession() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         showDashboard();
       }
-    }
-
-    function showDashboard() {
-      loginContainer.style.display = 'none';
-      dashboard.style.display = 'block';
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
