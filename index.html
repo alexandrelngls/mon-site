@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mon Drive</title>
-  <script src="https://unpkg.com/@supabase/supabase-js@2.0.3/dist/supabase.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -55,7 +54,7 @@
 
   <div class="container">
     <h1>Connecte-toi à ton Espace Privé</h1>
-    
+
     <form id="loginForm">
       <input type="email" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Mot de passe" required />
@@ -65,6 +64,15 @@
     <p id="loginMessage" class="message"></p>
   </div>
 
-  <script src="app.js"></script>
+  <!-- Import Supabase depuis un CDN fiable -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz...'; // ton vrai token ici
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+    window.supabaseClient = supabaseClient; // exposer à app.js
+  </script>
+
+  <script type="module" src="app.js"></script>
 </body>
 </html>
