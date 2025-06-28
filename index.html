@@ -3,98 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mon Drive</title>
+  <title>Mon Cloud Privé</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      padding: 50px;
+      margin: 0;
+      padding: 0;
+      background: url('https://images.unsplash.com/photo-1503264116251-35a269479413?fit=crop&w=1920&q=80') no-repeat center center fixed;
+      background-size: cover;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      backdrop-filter: blur(10px);
     }
-    .container {
-      max-width: 400px;
-      margin: auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #ccc;
+
+    .container, .dashboard {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      max-width: 500px;
+      width: 100%;
+      color: white;
     }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
     input {
       width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+      font-size: 16px;
     }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
     button {
       width: 100%;
-      background-color: #4CAF50;
-      color: white;
-      padding: 12px;
-      font-size: 16px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.25);
       border: none;
-      border-radius: 5px;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
+
     button:hover {
-      background-color: #45a049;
+      background: rgba(255, 255, 255, 0.4);
     }
+
     .message {
       margin-top: 15px;
+      text-align: center;
       font-size: 14px;
     }
+
     .error {
-      color: red;
+      color: #ff4d4d;
     }
+
     .success {
-      color: green;
+      color: #4dff88;
+    }
+
+    .dashboard {
+      display: none;
+    }
+
+    .apps {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .app {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      font-size: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h1>Créer un compte ou se connecter</h1>
-
-    <form id="authForm">
+  <div class="container" id="loginContainer">
+    <h1>Connexion privée</h1>
+    <form id="loginForm">
       <input type="email" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Mot de passe" required />
-      <button type="submit">Créer un compte</button>
+      <button type="submit">Se connecter</button>
     </form>
-
-    <button id="loginButton">Se connecter</button>
-
     <p id="message" class="message"></p>
+  </div>
+
+  <div class="dashboard" id="dashboard">
+    <h1>Bienvenue dans votre espace privé</h1>
+    <div class="apps">
+      <div class="app">📁 Drive</div>
+      <div class="app">📝 Notes</div>
+      <div class="app">📷 Photos</div>
+      <div class="app">🔑 Mots de passe</div>
+      <div class="app">📅 Calendrier</div>
+    </div>
+    <button id="logoutButton" style="margin-top: 30px;">Se déconnecter</button>
   </div>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
-
     const supabase = createClient('https://nqrtrpsommuudwoakgcp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M');
 
-    const form = document.getElementById('authForm');
-    const loginButton = document.getElementById('loginButton');
+    const loginContainer = document.getElementById('loginContainer');
+    const dashboard = document.getElementById('dashboard');
     const messageEl = document.getElementById('message');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      messageEl.textContent = "";
-      messageEl.className = "message";
-
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      console.log("Signup result:", data, error);
-
-      if (error) {
-        messageEl.textContent = "❌ Erreur création : " + error.message;
-        messageEl.classList.add("error");
-      } else {
-        messageEl.textContent = "✅ Compte créé avec succès, vous pouvez maintenant vous connecter.";
-        messageEl.classList.add("success");
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        showDashboard();
       }
-    });
+    }
 
-    loginButton.addEventListener('click', async () => {
+    function showDashboard() {
+      loginContainer.style.display = 'none';
+      dashboard.style.display = 'block';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       messageEl.textContent = "";
@@ -104,13 +156,21 @@
       console.log("Login result:", data, error);
 
       if (error) {
-        messageEl.textContent = "❌ Erreur connexion : " + error.message;
+        messageEl.textContent = "❌ Erreur : " + error.message;
         messageEl.classList.add("error");
       } else {
         messageEl.textContent = "✅ Connecté avec succès ! 🎉";
         messageEl.classList.add("success");
+        showDashboard();
       }
     });
+
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      location.reload();
+    });
+
+    checkSession();
   </script>
 
 </body>
