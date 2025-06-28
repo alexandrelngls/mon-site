@@ -3,13 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mon Cloud Privé</title>
+  <title>Cloud de Alexandre</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <button id="themeToggle">🌙</button>
+  <header class="topbar">
+    <div class="logo">Cloud de Alexandre</div>
+    <button id="themeToggle">🌙</button>
+  </header>
 
+  <!-- CONNEXION -->
   <div class="container" id="loginContainer">
     <h1>Connexion privée</h1>
     <form id="loginForm">
@@ -20,17 +24,25 @@
     <p id="message" class="message"></p>
   </div>
 
-  <div class="dashboard" id="dashboard">
-    <h1 id="welcome"></h1>
-    <div class="apps">
-      <div class="app">📁 Drive</div>
-      <div class="app">📝 Notes</div>
-      <div class="app">📷 Photos</div>
-      <div class="app">🔑 Mots de passe</div>
-      <div class="app">📅 Calendrier</div>
-    </div>
-    <button id="logoutButton" style="margin-top: 30px;">Se déconnecter</button>
-  </div>
+  <!-- DASHBOARD -->
+  <main class="dashboard" id="dashboard">
+    <section class="profile">
+      <div class="avatar"></div>
+      <div class="info">
+        <div class="name">Alexandre</div>
+        <div class="email">alexandre.lngls@icloud.com</div>
+      </div>
+    </section>
+
+    <section class="widgets">
+      <div class="widget">📧 Mail</div>
+      <div class="widget">📷 Photos</div>
+      <div class="widget">📁 Drive</div>
+      <div class="widget">📝 Notes</div>
+    </section>
+
+    <button id="logoutButton">Se déconnecter</button>
+  </main>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
@@ -39,21 +51,14 @@
     const loginContainer = document.getElementById('loginContainer');
     const dashboard = document.getElementById('dashboard');
     const messageEl = document.getElementById('message');
-    const welcomeEl = document.getElementById('welcome');
 
     document.getElementById('themeToggle').addEventListener('click', () => {
       document.body.classList.toggle('dark');
     });
 
-    function getWelcomeMessage() {
-      const hour = new Date().getHours();
-      return (hour >= 8 && hour < 18) ? 'Bonjour Alexandre' : 'Bonsoir Alexandre';
-    }
-
     function showDashboard() {
       loginContainer.style.display = 'none';
       dashboard.style.display = 'flex';
-      welcomeEl.textContent = getWelcomeMessage();
     }
 
     async function checkSession() {
@@ -71,7 +76,6 @@
       messageEl.className = "message";
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      console.log("Login result:", data, error);
 
       if (error) {
         messageEl.textContent = "❌ Erreur : " + error.message;
