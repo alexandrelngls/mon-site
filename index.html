@@ -53,55 +53,62 @@
 <body>
 
   <div class="container">
-    <h1>Connecte-toi à ton Espace Privé</h1>
+    <h1>Créer un compte ou se connecter</h1>
 
-    <form id="loginForm">
+    <form id="authForm">
       <input type="email" id="email" placeholder="Email" required />
       <input type="password" id="password" placeholder="Mot de passe" required />
-      <button type="submit">Se connecter</button>
+      <button type="submit">Créer un compte</button>
     </form>
 
-    <p id="loginMessage" class="message"></p>
+    <button id="loginButton">Se connecter</button>
+
+    <p id="message" class="message"></p>
   </div>
 
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M';
+    const supabase = createClient('https://nqrtrpsommuudwoakgcp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M');
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const form = document.getElementById('authForm');
+    const loginButton = document.getElementById('loginButton');
+    const messageEl = document.getElementById('message');
 
-    document.getElementById('loginForm').addEventListener('submit', async (event) => {
-      event.preventDefault();
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const messageEl = document.getElementById('loginMessage');
-
       messageEl.textContent = "";
       messageEl.className = "message";
 
-      if (!email || !password) {
-        messageEl.textContent = "❌ Veuillez remplir tous les champs !";
-        messageEl.classList.add("error");
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      console.log("Réponse Supabase :", data, error);
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      console.log("Signup result:", data, error);
 
       if (error) {
-        messageEl.textContent = "❌ Erreur : " + error.message;
+        messageEl.textContent = "❌ Erreur création : " + error.message;
         messageEl.classList.add("error");
-        return;
+      } else {
+        messageEl.textContent = "✅ Compte créé avec succès, vous pouvez maintenant vous connecter.";
+        messageEl.classList.add("success");
       }
+    });
 
-      if (data && data.user) {
+    loginButton.addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      messageEl.textContent = "";
+      messageEl.className = "message";
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      console.log("Login result:", data, error);
+
+      if (error) {
+        messageEl.textContent = "❌ Erreur connexion : " + error.message;
+        messageEl.classList.add("error");
+      } else {
         messageEl.textContent = "✅ Connecté avec succès ! 🎉";
         messageEl.classList.add("success");
-      } else {
-        messageEl.textContent = "❌ Identifiants incorrects.";
-        messageEl.classList.add("error");
       }
     });
   </script>
