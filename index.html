@@ -1,31 +1,57 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <title>Mon Site Sécurisé</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <h1>Drive 🛡️</h1>
+// Configuration Firebase
+const firebaseConfig = {
+  apiKey: "TON_API_KEY",
+  authDomain: "ton-projet.firebaseapp.com",
+  projectId: "ton-projet",
+};
+firebase.initializeApp(firebaseConfig);
 
-  <!-- Zone de connexion -->
-  <div id="auth">
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Mot de passe" />
-    <button onclick="seConnecter()">Se connecter</button>
-  </div>
+const auth = firebase.auth();
+const storage = firebase.storage();
 
-  <!-- Zone d'upload -->
-  <div id="drive" style="display:none;">
-    <h2>Ton drive 📁</h2>
-    <input type="file" id="fichier" />
-    <button onclick="telechargerFichier()">Uploader</button>
-    <ul id="listeFichiers"></ul>
-  </div>
+function seConnecter() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+  auth.signInWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      alert("Connecté ! 🎉");
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("drive").style.display = "block";
+    })
+    .catch((error) => {
+      alert("Erreur : " + error.message);
+    });
+}
+
+function telechargerFichier() {
+  const fileInput = document.getElementById("fichier");
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("Veuillez sélectionner un fichier !");
+    return;
+  }
+
+  const storageRef = storage.ref().child("uploads/" + file.name);
+  storageRef.put(file).then((snapshot) => {
+    console.log("Fichier uploadé !", snapshot);
+    afficherFichiers();
+  });
+}
+
+function afficherFichiers() {
+  const liste = document.getElementById("listeFichiers");
+  liste.innerHTML = "";
+
+  const storageRef = storage.ref().child("uploads/");
+  storageRef.listAll().then((res) => {
+    res.items.forEach((item) => {
+      item.getMetadata().then((metadata) => {
+        const li = document.createElement("li");
+        li.textContent = item.name;
+        liste.appendChild(li);
+      });
+    });
+  });
+}
