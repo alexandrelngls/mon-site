@@ -1,4 +1,4 @@
-// ✅ 1. Configure Supabase avec tes clés
+// ✅ 1. Configure Supabase avec tes clés (remplace les ci-dessous par les tiennes)
 const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M';
 
@@ -32,6 +32,6 @@ async function seConnecter() {
       throw new Error(error.message);
     }
   } catch (err) {
-    document.getElementById('loginMessage').textContent = "Identifiants incorrects. Réessaie.";
+    document.getElementById('loginMessage').textContent = "Erreur de connexion. Vérifiez vos identifiants.";
   }
 }
