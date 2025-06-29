@@ -3,18 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cloud Drive</title>
+  <title>Cloud Drive 1</title>
 </head>
 <body>
   <h1>Connexion</h1>
-  <form id="loginForm">
+  <form id="loginForm" onsubmit="return false;">
     <input type="email" id="email" placeholder="Email" required />
     <input type="password" id="password" placeholder="Mot de passe" required />
     <button type="submit">Se connecter</button>
   </form>
   <p id="message"></p>
 
-  <!-- Charge app.js comme module, après le formulaire -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
