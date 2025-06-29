@@ -79,9 +79,11 @@ async function fetchDashboard(token) {
       throw new Error("Erreur serveur : " + response.status);
     }
 
-    const data = await response.json();
-    console.log("✅ Lien signé reçu :", data.url);
-    window.location.href = data.url;
+    const html = await response.text();
+    document.open();
+    document.write(html);
+    document.close();
+
   } catch (err) {
     console.error(err);
     messageEl.textContent = "❌ Impossible de charger votre dashboard sécurisé.";
