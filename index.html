@@ -14,35 +14,7 @@
   </form>
   <p id="message"></p>
 
-<script>
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-
-  try {
-    const resp = await fetch('https://secure.alexandrelanglois.me/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password })
-    });
-
-    if (resp.ok) {
-      const html = await resp.text();
-      document.open();
-      document.write(html);
-      document.close();
-    } else {
-      const text = await resp.text();
-      document.getElementById('message').textContent = "❌ " + text;
-    }
-  } catch (err) {
-    console.error(err);
-    document.getElementById('message').textContent = "❌ Erreur réseau.";
-  }
-});
-</script>
+  <script src="auth.js" defer></script>
+  <script src="app.js" defer></script>
 </body>
 </html>
