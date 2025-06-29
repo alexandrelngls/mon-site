@@ -43,7 +43,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 async function callWorker(token) {
   try {
     const resp = await fetch('https://secure.alexandrelanglois.me/', {
-      headers: { 'Authorization': Bearer ${token} }
+      'Authorization': `Bearer ${token}`
     });
     if (resp.ok) {
       const html = await resp.text();
