@@ -27,6 +27,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (data?.session?.access_token) {
+  console.log("🔑 Access Token :", data.session.access_token);
+}
 
   if (error) {
     document.getElementById('message').textContent = "❌ " + error.message;
