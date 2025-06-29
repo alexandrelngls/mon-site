@@ -3,34 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cloud de Alexandre</title>
-  <style>
-    body { font-family: sans-serif; background: #f9f9f9; margin: 0; padding: 50px; }
-    .container { max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
-    input, button { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #4CAF50; color: white; border: none; }
-    button:hover { background: #45a049; }
-    .message { margin-top: 10px; }
-    .error { color: red; }
-    .success { color: green; }
-  </style>
+  <title>Cloud sécurisé</title>
 </head>
 <body>
-
-<div class="container" id="loginContainer">
-  <h1>Connexion privée</h1>
+  <h1>Connexion</h1>
   <form id="loginForm">
     <input type="email" id="email" placeholder="Email" required />
     <input type="password" id="password" placeholder="Mot de passe" required />
     <button type="submit">Se connecter</button>
   </form>
-  <p id="message" class="message"></p>
-</div>
-
-<div class="container" id="userContainer" style="display:none;">
-  <h1>Bienvenue <span id="userEmail"></span></h1>
-  <button id="logout">Se déconnecter</button>
-</div>
+  <p id="message"></p>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
@@ -40,49 +22,39 @@ const supabase = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M'
 );
 
-const loginContainer = document.getElementById('loginContainer');
-const userContainer = document.getElementById('userContainer');
-const messageEl = document.getElementById('message');
-const userEmailEl = document.getElementById('userEmail');
-
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  messageEl.textContent = "⏳ Connexion...";
-  const email = document.getElementById('email').value;
+  const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  
+
   if (error) {
-    messageEl.textContent = "❌ " + error.message;
-    messageEl.className = "message error";
+    document.getElementById('message').textContent = "❌ " + error.message;
   } else {
-    messageEl.textContent = "";
-    showUser(data.user);
+    const token = data.session.access_token;
+    document.getElementById('message').textContent = "✅ Connexion réussie. Vérification...";
+    await callWorker(token);
   }
 });
 
-document.getElementById('logout').addEventListener('click', async () => {
-  await supabase.auth.signOut();
-  userContainer.style.display = "none";
-  loginContainer.style.display = "block";
-});
-
-async function checkSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) {
-    showUser(session.user);
+async function callWorker(token) {
+  try {
+    const resp = await fetch('https://secure.alexandrelanglois.me/', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (resp.ok) {
+      const html = await resp.text();
+      document.open();
+      document.write(html);
+      document.close();
+    } else {
+      document.getElementById('message').textContent = "❌ Accès refusé.";
+    }
+  } catch (err) {
+    console.error(err);
+    document.getElementById('message').textContent = "❌ Erreur réseau.";
   }
 }
-
-function showUser(user) {
-  loginContainer.style.display = "none";
-  userContainer.style.display = "block";
-  userEmailEl.textContent = user.email;
-}
-
-checkSession();
 </script>
-
 </body>
 </html>
