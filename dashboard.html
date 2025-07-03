@@ -9,6 +9,14 @@
 </head>
 
 <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <span class="loading-spinner"></span>
+            <p>Vérification de la session...</p>
+        </div>
+    </div>
+
     <div class="header">
         <div class="header-left">
             <div class="logo-header">☁️ Cloud Personnel</div>
@@ -23,7 +31,7 @@
                     <div class="dropdown-item" id="settingsItem">
                         ⚙️ Paramètres
                     </div>
-                    <div class="dropdown-item onclick="window.location.href='/dashboard/notes'">
+                    <div class="dropdown-item" onclick="window.location.href='/dashboard/notes'">
                         📝 Mes notes
                     </div>
                     <div class="dropdown-separator"></div>
@@ -203,6 +211,9 @@
     </div>
 
     <script>
+        // Configuration
+        const WORKER_URL = 'https://cloude-prive-alexandre.alexandre-lngls.workers.dev';
+        
         // Variables globales
         let currentUser = null;
         let userPreferences = {
@@ -214,6 +225,49 @@
             fontSize: 'normal',
             animations: true
         };
+
+        // === FONCTIONS D'AUTHENTIFICATION ===
+        async function checkSession() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const response = await fetch(`${WORKER_URL}/verify-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                currentUser = data.user;
+                updateUserAvatar();
+            } catch (error) {
+                console.error('Erreur vérification session:', error);
+                window.location.href = '/';
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${WORKER_URL}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Erreur déconnexion:', error);
+            }
+        }
 
         // === FONCTIONS DE GESTION DES PRÉFÉRENCES ===
         function loadPreferences() {
@@ -300,36 +354,6 @@
                 '#ffecd2': 'linear-gradient(135deg, #ffecd2, #fcb69f)'
             };
             return gradients[baseColor] || gradients['#667eea'];
-        }
-
-        // === FONCTIONS DE GESTION DE SESSION ===
-        async function initDashboard() {
-            loadPreferences();
-            
-            try {
-                const response = await fetch('/verify-session', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const result = await response.json();
-                if (!result.success) {
-                    window.location.href = '/';
-                    return;
-                }
-                
-                currentUser = result.user;
-                updateUserAvatar();
-                
-                // Charger les widgets
-                await loadWidgets();
-                
-            } catch (error) {
-                console.error('Erreur de vérification de session:', error);
-                window.location.href = '/';
-            }
         }
 
         // === FONCTIONS DE GESTION DES WIDGETS ===
@@ -524,25 +548,10 @@
             }
         }
 
-        // === FONCTION DE DÉCONNEXION ===
-        async function logout() {
-            try {
-                await fetch('/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-            } catch (error) {
-                // Ignorer l'erreur
-            }
-            
-            window.location.href = '/';
-        }
-
         // === INITIALISATION ===
-        document.addEventListener('DOMContentLoaded', function() {
-            initDashboard();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkSession();
+            loadPreferences();
             
             // Setup du menu utilisateur
             const userAvatar = document.getElementById('userAvatar');
@@ -644,5 +653,44 @@
             });
         });
     </script>
+
+    <style>
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .dark-mode .loading-overlay {
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+        }
+    </style>
 </body>
 </html> 
