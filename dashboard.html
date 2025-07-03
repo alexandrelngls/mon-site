@@ -1,1 +1,648 @@
-<h1>Dashboard</h1>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Personnel - Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☁️</text></svg>">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="logo-header">☁️ Cloud Personnel</div>
+        </div>
+        <div class="header-right">
+            <div class="user-menu">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <div class="dropdown-item" id="profileItem">
+                        👤 Mon profil
+                    </div>
+                    <div class="dropdown-item" id="settingsItem">
+                        ⚙️ Paramètres
+                    </div>
+                    <div class="dropdown-item onclick="window.location.href='/dashboard/notes'">
+                        📝 Mes notes
+                    </div>
+                    <div class="dropdown-separator"></div>
+                    <div class="dropdown-item danger" id="logoutItem">
+                        🚪 Se déconnecter
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="content-header">
+            <h1>Dashboard</h1>
+        </div>
+        
+        <div class="widgets-grid" id="widgetsGrid">
+            <!-- Widget Notes -->
+            <div class="widget card" onclick="window.location.href='/dashboard/notes'">
+                <div class="widget-header">
+                    <div class="widget-icon">📝</div>
+                    <div class="widget-title">Notes</div>
+                </div>
+                <div class="widget-content">
+                    <div class="notes-count" id="notesCount">-</div>
+                    <div class="notes-preview">notes sauvegardées</div>
+                </div>
+                <div class="widget-footer">
+                    Cliquez pour voir toutes vos notes
+                </div>
+            </div>
+            
+            <!-- Widget Météo -->
+            <div class="widget weather-widget" id="weatherWidget">
+                <div class="widget-header">
+                    <div class="widget-icon">🌤️</div>
+                    <div class="widget-title">Météo Rennes</div>
+                </div>
+                <div class="widget-content">
+                    <div class="weather-emoji" id="weatherEmoji">☁️</div>
+                    <div class="weather-temp" id="weatherTemp">--°C</div>
+                    <div class="weather-desc" id="weatherDesc">Chargement...</div>
+                </div>
+            </div>
+            
+            <!-- Widget Linktree -->
+            <div class="widget card" onclick="window.location.href='/dashboard/linktree'">
+                <div class="widget-header">
+                    <div class="widget-icon">🔗</div>
+                    <div class="widget-title">Mon Linktree</div>
+                </div>
+                <div class="widget-content">
+                    <div class="linktree-preview" id="linktreePreview">
+                        <div class="preview-link">🌐 Site personnel</div>
+                        <div class="preview-link">📱 Réseaux sociaux</div>
+                        <div class="preview-link">💼 Professionnel</div>
+                    </div>
+                </div>
+                <div class="widget-footer">
+                    Gérer vos liens publics
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Profil -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Mon profil</div>
+                <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="firstName">Prénom</label>
+                        <input type="text" id="firstName" name="firstName" placeholder="Votre prénom" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Nom</label>
+                        <input type="text" id="lastName" name="lastName" placeholder="Votre nom" class="input-field">
+                    </div>
+                    <div class="form-group">
+                        <label>Couleur de l'avatar</label>
+                        <div class="color-picker">
+                            <div class="color-option" data-color="#667eea" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                            <div class="color-option" data-color="#f093fb" style="background: linear-gradient(135deg, #f093fb, #f5576c);"></div>
+                            <div class="color-option" data-color="#4facfe" style="background: linear-gradient(135deg, #4facfe, #00f2fe);"></div>
+                            <div class="color-option" data-color="#43e97b" style="background: linear-gradient(135deg, #43e97b, #38f9d7);"></div>
+                            <div class="color-option" data-color="#fa709a" style="background: linear-gradient(135deg, #fa709a, #fee140);"></div>
+                            <div class="color-option" data-color="#a8edea" style="background: linear-gradient(135deg, #a8edea, #fed6e3);"></div>
+                            <div class="color-option" data-color="#ff9a9e" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);"></div>
+                            <div class="color-option" data-color="#ffecd2" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Annuler</button>
+                <button type="button" class="btn btn-primary" onclick="saveProfile()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Paramètres -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Paramètres</div>
+                <button class="close-btn" onclick="closeSettingsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3>🎨 Apparence</h3>
+                    <div class="form-group">
+                        <label>Thème</label>
+                        <div class="theme-selector">
+                            <div class="theme-option" data-theme="light">
+                                <div class="theme-preview light-preview"></div>
+                                <span>Clair</span>
+                            </div>
+                            <div class="theme-option" data-theme="dark">
+                                <div class="theme-preview dark-preview"></div>
+                                <span>Sombre</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Couleur d'accent</label>
+                        <div class="accent-color-picker">
+                            <div class="accent-option" data-accent="blue" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                            <div class="accent-option" data-accent="purple" style="background: linear-gradient(135deg, #a855f7, #3b82f6);"></div>
+                            <div class="accent-option" data-accent="green" style="background: linear-gradient(135deg, #10b981, #059669);"></div>
+                            <div class="accent-option" data-accent="orange" style="background: linear-gradient(135deg, #f59e0b, #d97706);"></div>
+                            <div class="accent-option" data-accent="red" style="background: linear-gradient(135deg, #ef4444, #dc2626);"></div>
+                            <div class="accent-option" data-accent="pink" style="background: linear-gradient(135deg, #ec4899, #be185d);"></div>
+                            <div class="accent-option" data-accent="indigo" style="background: linear-gradient(135deg, #6366f1, #4f46e5);"></div>
+                            <div class="accent-option" data-accent="teal" style="background: linear-gradient(135deg, #14b8a6, #0f766e);"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>📖 Accessibilité</h3>
+                    <div class="form-group">
+                        <label>Taille du texte</label>
+                        <div class="font-size-selector">
+                            <div class="font-size-option" data-size="small">Petit</div>
+                            <div class="font-size-option selected" data-size="normal">Normal</div>
+                            <div class="font-size-option" data-size="large">Grand</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Animations</label>
+                        <div class="animation-toggle">
+                            <div class="toggle-switch active" id="animationToggle">
+                                <div class="toggle-slider"></div>
+                            </div>
+                            <span>Activer les animations</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>💾 Données</h3>
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" onclick="exportData()">📥 Exporter mes notes</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="closeSettingsModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let userPreferences = {
+            firstName: '',
+            lastName: '',
+            avatarColor: '#667eea',
+            theme: 'light',
+            accentColor: 'blue',
+            fontSize: 'normal',
+            animations: true
+        };
+
+        // === FONCTIONS DE GESTION DES PRÉFÉRENCES ===
+        function loadPreferences() {
+            const saved = localStorage.getItem('cloudPreferences');
+            if (saved) {
+                try {
+                    userPreferences = { ...userPreferences, ...JSON.parse(saved) };
+                } catch (e) {
+                    console.error('Erreur lors du chargement des préférences:', e);
+                }
+            }
+            applyPreferences();
+        }
+
+        function savePreferences() {
+            localStorage.setItem('cloudPreferences', JSON.stringify(userPreferences));
+            applyPreferences();
+        }
+
+        function applyPreferences() {
+            // Appliquer le thème
+            document.body.className = '';
+            if (userPreferences.theme === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+            
+            // Appliquer la taille de police
+            if (userPreferences.fontSize !== 'normal') {
+                document.body.classList.add('font-' + userPreferences.fontSize);
+            }
+            
+            // Appliquer les animations
+            if (!userPreferences.animations) {
+                document.body.classList.add('reduced-motion');
+            }
+            
+            // Appliquer la couleur d'accent
+            applyAccentColor(userPreferences.accentColor);
+            
+            // Mettre à jour l'avatar
+            updateUserAvatar();
+        }
+
+        function applyAccentColor(color) {
+            const root = document.documentElement;
+            const accents = {
+                blue: 'linear-gradient(135deg, #667eea, #764ba2)',
+                purple: 'linear-gradient(135deg, #a855f7, #3b82f6)',
+                green: 'linear-gradient(135deg, #10b981, #059669)',
+                orange: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                red: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                pink: 'linear-gradient(135deg, #ec4899, #be185d)',
+                indigo: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                teal: 'linear-gradient(135deg, #14b8a6, #0f766e)'
+            };
+            
+            root.style.setProperty('--primary-gradient', accents[color] || accents.blue);
+        }
+
+        function updateUserAvatar() {
+            const userAvatar = document.getElementById('userAvatar');
+            if (userAvatar && currentUser) {
+                let displayText = '';
+                if (userPreferences.firstName || userPreferences.lastName) {
+                    displayText = (userPreferences.firstName.charAt(0) + userPreferences.lastName.charAt(0)).toUpperCase();
+                } else {
+                    displayText = currentUser.email.substring(0, 2).toUpperCase();
+                }
+                
+                userAvatar.textContent = displayText;
+                userAvatar.style.background = getAvatarGradient(userPreferences.avatarColor);
+            }
+        }
+
+        function getAvatarGradient(baseColor) {
+            const gradients = {
+                '#667eea': 'linear-gradient(135deg, #667eea, #764ba2)',
+                '#f093fb': 'linear-gradient(135deg, #f093fb, #f5576c)',
+                '#4facfe': 'linear-gradient(135deg, #4facfe, #00f2fe)',
+                '#43e97b': 'linear-gradient(135deg, #43e97b, #38f9d7)',
+                '#fa709a': 'linear-gradient(135deg, #fa709a, #fee140)',
+                '#a8edea': 'linear-gradient(135deg, #a8edea, #fed6e3)',
+                '#ff9a9e': 'linear-gradient(135deg, #ff9a9e, #fecfef)',
+                '#ffecd2': 'linear-gradient(135deg, #ffecd2, #fcb69f)'
+            };
+            return gradients[baseColor] || gradients['#667eea'];
+        }
+
+        // === FONCTIONS DE GESTION DE SESSION ===
+        async function initDashboard() {
+            loadPreferences();
+            
+            try {
+                const response = await fetch('/verify-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                if (!result.success) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                currentUser = result.user;
+                updateUserAvatar();
+                
+                // Charger les widgets
+                await loadWidgets();
+                
+            } catch (error) {
+                console.error('Erreur de vérification de session:', error);
+                window.location.href = '/';
+            }
+        }
+
+        // === FONCTIONS DE GESTION DES WIDGETS ===
+        async function loadWidgets() {
+            await loadNotesWidget();
+            await loadWeatherWidget();
+            await loadLinktreeWidget();
+        }
+
+        async function loadNotesWidget() {
+            try {
+                const response = await fetch('/api/notes', {
+                    method: 'GET'
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    const notesCount = document.getElementById('notesCount');
+                    notesCount.textContent = result.notes.length;
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement du widget notes:', error);
+            }
+        }
+
+        async function loadWeatherWidget() {
+            try {
+                console.log('🌤️ Chargement widget météo...');
+                const response = await fetch('/api/weather', {
+                    method: 'GET'
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    const weatherWidget = document.getElementById('weatherWidget');
+                    const weatherEmoji = document.getElementById('weatherEmoji');
+                    const weatherTemp = document.getElementById('weatherTemp');
+                    const weatherDesc = document.getElementById('weatherDesc');
+                    
+                    weatherEmoji.textContent = result.emoji;
+                    weatherTemp.textContent = result.temperature + '°C';
+                    weatherDesc.textContent = result.description;
+                    
+                    // Appliquer la couleur de fond
+                    weatherWidget.style.background = result.color;
+                } else {
+                    const weatherDesc = document.getElementById('weatherDesc');
+                    weatherDesc.textContent = result.message || 'Météo indisponible';
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement de la météo:', error);
+                const weatherDesc = document.getElementById('weatherDesc');
+                weatherDesc.textContent = 'Erreur de connexion météo';
+            }
+        }
+
+        async function loadLinktreeWidget() {
+            try {
+                const response = await fetch('/api/linktree', {
+                    method: 'GET'
+                });
+                
+                const result = await response.json();
+                if (result.success && result.profile) {
+                    const linktreePreview = document.getElementById('linktreePreview');
+                    const links = result.profile.links.slice(0, 3); // Afficher max 3 liens
+                    
+                    if (links.length > 0) {
+                        linktreePreview.innerHTML = links.map(link => `
+                            <div class="preview-link">${link.icon} ${link.title}</div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement du widget linktree:', error);
+            }
+        }
+
+        // === FONCTIONS DE GESTION DES MODALS ===
+        function openProfileModal() {
+            const modal = document.getElementById('profileModal');
+            const firstName = document.getElementById('firstName');
+            const lastName = document.getElementById('lastName');
+            
+            firstName.value = userPreferences.firstName;
+            lastName.value = userPreferences.lastName;
+            
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('selected');
+                if (option.dataset.color === userPreferences.avatarColor) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            modal.classList.add('show', 'fade-in');
+            firstName.focus();
+        }
+
+        function closeProfileModal() {
+            const modal = document.getElementById('profileModal');
+            modal.classList.remove('show', 'fade-in');
+        }
+
+        function saveProfile() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const selectedColor = document.querySelector('.color-option.selected');
+            
+            userPreferences.firstName = firstName;
+            userPreferences.lastName = lastName;
+            if (selectedColor) {
+                userPreferences.avatarColor = selectedColor.dataset.color;
+            }
+            
+            savePreferences();
+            closeProfileModal();
+        }
+
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            
+            // Sélectionner le thème actuel
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('selected');
+                if (option.dataset.theme === userPreferences.theme) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            // Sélectionner la couleur d'accent actuelle
+            document.querySelectorAll('.accent-option').forEach(option => {
+                option.classList.remove('selected');
+                if (option.dataset.accent === userPreferences.accentColor) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            // Sélectionner la taille de police actuelle
+            document.querySelectorAll('.font-size-option').forEach(option => {
+                option.classList.remove('selected');
+                if (option.dataset.size === userPreferences.fontSize) {
+                    option.classList.add('selected');
+                }
+            });
+            
+            // Mettre à jour le toggle des animations
+            const animationToggle = document.getElementById('animationToggle');
+            if (userPreferences.animations) {
+                animationToggle.classList.add('active');
+            } else {
+                animationToggle.classList.remove('active');
+            }
+            
+            modal.classList.add('show', 'fade-in');
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.remove('show', 'fade-in');
+        }
+
+        // === FONCTION D'EXPORT ===
+        async function exportData() {
+            try {
+                const response = await fetch('/api/notes', { method: 'GET' });
+                const result = await response.json();
+                
+                if (!result.success || !result.notes || result.notes.length === 0) {
+                    alert('Aucune note à exporter');
+                    return;
+                }
+                
+                const dataStr = JSON.stringify({
+                    notes: result.notes,
+                    exportDate: new Date().toISOString(),
+                    user: currentUser?.email
+                }, null, 2);
+                
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `cloud-personnel-notes-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Erreur lors de l\'export:', error);
+                alert('Erreur lors de l\'export des notes');
+            }
+        }
+
+        // === FONCTION DE DÉCONNEXION ===
+        async function logout() {
+            try {
+                await fetch('/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+            } catch (error) {
+                // Ignorer l'erreur
+            }
+            
+            window.location.href = '/';
+        }
+
+        // === INITIALISATION ===
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+            
+            // Setup du menu utilisateur
+            const userAvatar = document.getElementById('userAvatar');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            const profileItem = document.getElementById('profileItem');
+            const settingsItem = document.getElementById('settingsItem');
+            const logoutItem = document.getElementById('logoutItem');
+            
+            userAvatar.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+                if (dropdownMenu.classList.contains('show')) {
+                    dropdownMenu.classList.add('fade-in');
+                }
+            });
+            
+            document.addEventListener('click', function() {
+                dropdownMenu.classList.remove('show', 'fade-in');
+            });
+            
+            dropdownMenu.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            profileItem.addEventListener('click', function() {
+                dropdownMenu.classList.remove('show', 'fade-in');
+                openProfileModal();
+            });
+            
+            settingsItem.addEventListener('click', function() {
+                dropdownMenu.classList.remove('show', 'fade-in');
+                openSettingsModal();
+            });
+            
+            logoutItem.addEventListener('click', logout);
+            
+            // Setup des sélecteurs avec changements live
+            // Sélecteur de couleur d'avatar
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    userPreferences.avatarColor = this.dataset.color;
+                    updateUserAvatar();
+                    savePreferences();
+                });
+            });
+            
+            // Sélecteur de thème
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    userPreferences.theme = this.dataset.theme;
+                    applyPreferences();
+                    savePreferences();
+                });
+            });
+            
+            // Sélecteur de couleur d'accent
+            document.querySelectorAll('.accent-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.accent-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    userPreferences.accentColor = this.dataset.accent;
+                    applyAccentColor(this.dataset.accent);
+                    savePreferences();
+                });
+            });
+            
+            // Sélecteur de taille de police
+            document.querySelectorAll('.font-size-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.font-size-option').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    userPreferences.fontSize = this.dataset.size;
+                    applyPreferences();
+                    savePreferences();
+                });
+            });
+            
+            // Toggle des animations
+            const animationToggle = document.getElementById('animationToggle');
+            if (animationToggle) {
+                animationToggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    userPreferences.animations = this.classList.contains('active');
+                    applyPreferences();
+                    savePreferences();
+                });
+            }
+            
+            // Raccourcis clavier
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeProfileModal();
+                    closeSettingsModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
