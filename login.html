@@ -42,25 +42,31 @@
     </div>
 
     <script>
+        // Configuration
+        const WORKER_URL = 'https://cloude-prive-alexandre.alexandre-lngls.workers.dev';
+        
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
         const messageDiv = document.getElementById('message');
         const loadingSessionDiv = document.getElementById('loading-session');
         
         // Fonction: Vérifier si une session existe déjà
-        function checkExistingSession() {
+        async function checkExistingSession() {
             loadingSessionDiv.style.display = 'block';
             loginForm.style.opacity = '0.5';
             loginBtn.disabled = true;
             
-            fetch('/verify-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(result => {
+            try {
+                const response = await fetch(`${WORKER_URL}/verify-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
                 loadingSessionDiv.style.display = 'none';
                 loginForm.style.opacity = '1';
                 loginBtn.disabled = false;
@@ -69,12 +75,12 @@
                     showMessage('Session active détectée. Redirection...', 'success');
                     setTimeout(() => window.location.href = '/dashboard', 1000);
                 }
-            })
-            .catch(error => {
+            } catch (error) {
+                console.error('Erreur vérification session:', error);
                 loadingSessionDiv.style.display = 'none';
                 loginForm.style.opacity = '1';
                 loginBtn.disabled = false;
-            });
+            }
         }
         
         // Fonction: Afficher un message
@@ -100,12 +106,11 @@
         }
         
         // Gestionnaire: Soumission du formulaire
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(loginForm);
-            const email = formData.get('email');
-            const password = formData.get('password');
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
             
             if (!email || !password) {
                 showMessage('Veuillez remplir tous les champs', 'error');
@@ -115,25 +120,29 @@
             setLoading(true);
             messageDiv.style.display = 'none';
             
-            fetch('/login', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(result => {
-                setLoading(false);
+            try {
+                const response = await fetch(`${WORKER_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
                 
-                if (result.success) {
-                    showMessage(result.message, 'success');
-                    setTimeout(() => window.location.href = result.redirectUrl, 1500);
+                if (response.ok) {
+                    showMessage('Connexion réussie', 'success');
+                    setTimeout(() => window.location.href = '/dashboard', 1500);
                 } else {
-                    showMessage(result.message, 'error');
+                    const text = await response.text();
+                    showMessage(text || 'Email ou mot de passe incorrect', 'error');
                 }
-            })
-            .catch(error => {
-                setLoading(false);
+            } catch (error) {
+                console.error('Erreur connexion:', error);
                 showMessage('Erreur de connexion. Veuillez réessayer.', 'error');
-            });
+            } finally {
+                setLoading(false);
+            }
         });
         
         // Effacer les messages d'erreur lors de la saisie
