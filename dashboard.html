@@ -3,167 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Personnel - Dashboard</title>
+    <title>Drive Privé - Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="dashboard-page">
-    <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <p>Chargement...</p>
-    </div>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Mon Drive Privé</h1>
+            <button onclick="handleLogout()" class="btn btn-primary">Déconnexion</button>
+        </div>
 
-    <div id="dashboard" class="dashboard-container" style="display: none;">
-        <header class="dashboard-header">
-            <h1>Mon Cloud Personnel</h1>
-            <button id="logout" class="btn-secondary">Déconnexion</button>
-        </header>
+        <div id="errorAlert" class="alert alert-error"></div>
+        <div id="successAlert" class="alert alert-success"></div>
 
-        <main class="dashboard-content">
-            <section class="upload-section">
-                <h2>Ajouter un fichier</h2>
-                <form id="upload-form" class="upload-form">
-                    <input type="file" id="file" name="file" required>
-                    <button type="submit" class="btn-primary">Uploader</button>
-                </form>
-                <div id="upload-progress" class="progress" style="display: none;">
-                    <div class="progress-bar"></div>
-                </div>
-            </section>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+            <p>Cliquez ou glissez des fichiers ici pour les uploader</p>
+            <input type="file" id="fileInput" style="display: none" multiple onchange="handleFileSelect(event)">
+        </div>
 
-            <section class="files-section">
-                <h2>Mes fichiers</h2>
-                <div id="files-grid" class="files-grid">
-                    <!-- Les fichiers seront ajoutés ici dynamiquement -->
-                </div>
-            </section>
-        </main>
+        <div id="spinner" class="spinner"></div>
+        <div id="filesGrid" class="files-grid"></div>
     </div>
 
     <script>
+        // Configuration
         const WORKER_URL = 'https://cloude-prive-alexandre.alexandre-lngls.workers.dev';
-        const SITE_URL = 'https://alexandrelanglois.me';
-        
-        // Vérifier l'authentification dès le chargement
+        const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
+        const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}'; // Sera remplacé par le binding
+        const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        // Gestion des alertes
+        function showError(message) {
+            const alert = document.getElementById('errorAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+
+        // Gestion du spinner
+        function toggleSpinner(show) {
+            document.getElementById('spinner').style.display = show ? 'block' : 'none';
+        }
+
+        // Vérification de l'authentification
         async function checkAuth() {
-            try {
-                const response = await fetch(`${WORKER_URL}/list-files`, {
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Non autorisé');
-                }
-
-                // Authentification réussie, afficher le dashboard
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                
-                // Charger les fichiers
-                loadFiles();
-            } catch (error) {
-                console.error('Erreur d\'authentification:', error);
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (!session) {
                 window.location.href = '/index.html';
+                return null;
             }
+            return session.access_token;
         }
 
-        // Charger la liste des fichiers
+        // Déconnexion
+        async function handleLogout() {
+            await supabase.auth.signOut();
+            window.location.href = '/index.html';
+        }
+
+        // Chargement des fichiers
         async function loadFiles() {
+            const token = await checkAuth();
+            if (!token) return;
+
+            toggleSpinner(true);
             try {
                 const response = await fetch(`${WORKER_URL}/list-files`, {
-                    credentials: 'include'
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
 
-                if (!response.ok) {
-                    throw new Error('Erreur de chargement des fichiers');
-                }
-
-                const files = await response.json();
-                const filesGrid = document.getElementById('files-grid');
-                filesGrid.innerHTML = '';
-
-                files.forEach(file => {
-                    const fileElement = document.createElement('div');
-                    fileElement.className = 'file-card';
-                    
-                    // Déterminer si c'est une image
-                    const isImage = file.metadata?.mimetype?.startsWith('image/');
-                    
-                    fileElement.innerHTML = `
-                        ${isImage ? `
-                            <div class="file-preview">
-                                <img src="${file.signedUrl}" alt="${file.name}">
-                            </div>
-                        ` : `
-                            <div class="file-icon">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
-                                </svg>
-                            </div>
-                        `}
-                        <div class="file-info">
-                            <h3>${file.name}</h3>
-                            <p>${formatFileSize(file.metadata?.size || 0)}</p>
-                            <a href="${file.signedUrl}" download="${file.name}" class="btn-secondary">Télécharger</a>
-                        </div>
-                    `;
-                    
-                    filesGrid.appendChild(fileElement);
-                });
-            } catch (error) {
-                console.error('Erreur de chargement:', error);
-            }
-        }
-
-        // Gérer l'upload de fichiers
-        document.getElementById('upload-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const fileInput = document.getElementById('file');
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const response = await fetch(`${WORKER_URL}/upload-file`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erreur lors de l\'upload');
-                }
-
-                // Recharger la liste des fichiers
-                loadFiles();
+                if (!response.ok) throw new Error('Erreur lors du chargement des fichiers');
                 
-                // Réinitialiser le formulaire
-                fileInput.value = '';
+                const files = await response.json();
+                displayFiles(files);
             } catch (error) {
-                console.error('Erreur d\'upload:', error);
-                alert('Erreur lors de l\'upload du fichier');
+                showError(error.message);
+            } finally {
+                toggleSpinner(false);
+            }
+        }
+
+        // Affichage des fichiers
+        function displayFiles(files) {
+            const grid = document.getElementById('filesGrid');
+            grid.innerHTML = '';
+
+            files.forEach(file => {
+                const card = document.createElement('div');
+                card.className = 'file-card';
+
+                const preview = document.createElement('img');
+                preview.className = 'file-preview';
+                preview.src = file.isImage ? file.url : '/assets/file-icon.png';
+                preview.alt = file.name;
+
+                const name = document.createElement('div');
+                name.className = 'file-name';
+                name.textContent = file.name;
+
+                const actions = document.createElement('div');
+                actions.className = 'file-actions';
+
+                const downloadBtn = document.createElement('a');
+                downloadBtn.href = file.url;
+                downloadBtn.className = 'btn btn-primary';
+                downloadBtn.textContent = 'Télécharger';
+                downloadBtn.download = file.name;
+
+                actions.appendChild(downloadBtn);
+                card.appendChild(preview);
+                card.appendChild(name);
+                card.appendChild(actions);
+                grid.appendChild(card);
+            });
+        }
+
+        // Upload de fichiers
+        async function handleFileSelect(event) {
+            const token = await checkAuth();
+            if (!token) return;
+
+            const files = event.target.files;
+            if (!files.length) return;
+
+            toggleSpinner(true);
+
+            for (const file of files) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch(`${WORKER_URL}/upload-file`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+
+                    if (!response.ok) throw new Error(`Erreur lors de l'upload de ${file.name}`);
+                    
+                    showSuccess(`${file.name} uploadé avec succès`);
+                } catch (error) {
+                    showError(error.message);
+                }
+            }
+
+            toggleSpinner(false);
+            loadFiles(); // Rechargement de la liste
+            event.target.value = ''; // Reset input
+        }
+
+        // Drag & Drop
+        const uploadZone = document.getElementById('uploadZone');
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'var(--primary-color)';
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.style.borderColor = 'var(--border-color)';
+        });
+
+        uploadZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            uploadZone.style.borderColor = 'var(--border-color)';
+            
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length) {
+                const event = { target: { files } };
+                await handleFileSelect(event);
             }
         });
 
-        // Gérer la déconnexion
-        document.getElementById('logout').addEventListener('click', () => {
-            document.cookie = 'sb-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-            window.location.href = '/index.html';
-        });
-
-        // Utilitaire pour formater la taille des fichiers
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // Vérifier l'authentification au chargement
-        checkAuth();
+        // Chargement initial
+        document.addEventListener('DOMContentLoaded', loadFiles);
     </script>
 </body>
 </html> 
