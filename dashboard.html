@@ -30,8 +30,8 @@
         // Configuration
         const WORKER_URL = 'https://cloude-prive-alexandre.alexandre-lngls.workers.dev';
         const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
-        const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}'; // Sera remplacé par le Worker
-        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}';
+        const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
 
         // Gestion des alertes
         function showError(message) {
@@ -55,9 +55,9 @@
 
         // Vérification de l'authentification
         async function checkAuth() {
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
+            const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                window.location.href = '/index.html';
+                window.location.href = '/';
                 return null;
             }
             return session.access_token;
@@ -65,8 +65,8 @@
 
         // Déconnexion
         async function handleLogout() {
-            await supabaseClient.auth.signOut();
-            window.location.href = '/index.html';
+            await supabase.auth.signOut();
+            window.location.href = '/';
         }
 
         // Chargement des fichiers
@@ -82,8 +82,10 @@
                     }
                 });
 
-                if (!response.ok) throw new Error('Erreur lors du chargement des fichiers');
-                
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement des fichiers');
+                }
+
                 const files = await response.json();
                 displayFiles(files);
             } catch (error) {
@@ -102,10 +104,17 @@
                 const card = document.createElement('div');
                 card.className = 'file-card';
 
-                const preview = document.createElement('img');
+                const preview = document.createElement('div');
                 preview.className = 'file-preview';
-                preview.src = file.isImage ? file.url : '/assets/file-icon.png';
-                preview.alt = file.name;
+                
+                if (file.isImage) {
+                    const img = document.createElement('img');
+                    img.src = file.url;
+                    img.alt = file.name;
+                    preview.appendChild(img);
+                } else {
+                    preview.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>';
+                }
 
                 const name = document.createElement('div');
                 name.className = 'file-name';
@@ -151,8 +160,10 @@
                         body: formData
                     });
 
-                    if (!response.ok) throw new Error(`Erreur lors de l'upload de ${file.name}`);
-                    
+                    if (!response.ok) {
+                        throw new Error(`Erreur lors de l'upload de ${file.name}`);
+                    }
+
                     showSuccess(`${file.name} uploadé avec succès`);
                 } catch (error) {
                     showError(error.message);
@@ -160,11 +171,11 @@
             }
 
             toggleSpinner(false);
-            loadFiles(); // Rechargement de la liste
-            event.target.value = ''; // Reset input
+            loadFiles();
+            event.target.value = '';
         }
 
-        // Drag & Drop
+        // Gestion du drag & drop
         const uploadZone = document.getElementById('uploadZone');
 
         uploadZone.addEventListener('dragover', (e) => {
@@ -189,8 +200,13 @@
             }
         });
 
-        // Chargement initial
-        document.addEventListener('DOMContentLoaded', loadFiles);
+        // Vérification initiale et chargement des fichiers
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = await checkAuth();
+            if (token) {
+                loadFiles();
+            }
+        });
     </script>
 </body>
 </html> 
