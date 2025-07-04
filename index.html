@@ -10,7 +10,7 @@
 <body>
     <div class="container">
         <div class="form-container">
-            <h1 class="form-title">Connexion au Drive Privé 1234</h1>
+            <h1 class="form-title">Connexion au Drive Privé 2</h1>
             
             <div id="errorAlert" class="alert alert-error"></div>
             
@@ -34,20 +34,25 @@
         // Initialisation de Supabase
         const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
         const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}'; // Sera remplacé par le binding
-        const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
         // Gestion des erreurs
         function showError(message) {
             const errorAlert = document.getElementById('errorAlert');
             errorAlert.textContent = message;
             errorAlert.style.display = 'block';
+            setTimeout(() => errorAlert.style.display = 'none', 5000);
         }
 
         // Vérification de la session existante
         async function checkSession() {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            if (session) {
-                window.location.href = '/dashboard.html';
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                if (session) {
+                    window.location.href = '/dashboard.html';
+                }
+            } catch (error) {
+                console.error('Erreur lors de la vérification de la session:', error);
             }
         }
 
@@ -59,7 +64,7 @@
             const password = document.getElementById('password').value;
             
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email,
                     password
                 });
@@ -69,7 +74,8 @@
                 // Redirection vers le dashboard en cas de succès
                 window.location.href = '/dashboard.html';
             } catch (error) {
-                showError('Erreur de connexion : ' + error.message);
+                console.error('Erreur de connexion:', error);
+                showError('Erreur de connexion : ' + (error.message || 'Identifiants invalides'));
             }
         }
 
