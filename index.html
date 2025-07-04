@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drive Privé - Connexion 123</title>
+    <title>Drive Privé - Connexion</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -31,7 +31,17 @@
         // Configuration
         const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
         const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}'; // Sera remplacé par le Worker
-        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        console.log('URL:', supabaseUrl);
+        console.log('Key length:', supabaseAnonKey.length);
+        console.log('Key starts with:', supabaseAnonKey.substring(0, 20));
+
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true
+            }
+        });
 
         // Gestion des alertes
         function showError(message) {
@@ -61,18 +71,22 @@
                     password
                 });
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Auth error:', error);
+                    throw error;
+                }
 
                 showSuccess('Connexion réussie !');
                 window.location.href = '/dashboard';
             } catch (error) {
+                console.error('Full error:', error);
                 showError('Erreur de connexion : ' + error.message);
             }
         }
 
         // Vérification de la session
         async function checkSession() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
             if (session) {
                 window.location.href = '/dashboard';
             }
