@@ -5,18 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - Drive Privé</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Injection des variables d'environnement -->
-    <script>
-        window.env = {
-            SUPABASE_ANON_KEY: '__SUPABASE_ANON_KEY__'
-        };
-    </script>
+    <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
         <div class="form-container">
-            <h1 class="form-title">Connexion au Drive Privé 3</h1>
+            <h1 class="form-title">Connexion au Drive Privé</h1>
             
             <div id="errorAlert" class="alert alert-error"></div>
             
@@ -39,7 +34,7 @@
     <script>
         // Initialisation de Supabase
         const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
-        const supabaseAnonKey = window.env.SUPABASE_ANON_KEY;
+        const supabaseAnonKey = window.SUPABASE_CONFIG.ANON_KEY;
 
         // Debug - Vérification de la clé
         console.log('Clé actuelle:', supabaseAnonKey);
