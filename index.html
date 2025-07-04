@@ -33,7 +33,7 @@
         const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}';
 
         // Initialisation du client Supabase
-        const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
         // Gestion des alertes
         function showError(message) {
