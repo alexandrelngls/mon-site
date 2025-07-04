@@ -3,96 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Personnel - Connexion</title>
+    <title>Connexion - Drive Privé</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="login-page">
-    <div class="login-container">
-        <h1>Cloud Personnel</h1>
-        <div id="error-message" class="error-message" style="display: none;"></div>
-        <div id="success-message" class="success-message" style="display: none;">Connexion réussie ! Redirection...</div>
-        <form id="login-form" class="login-form">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <button type="submit" class="btn-primary">Se connecter</button>
-        </form>
-        <div id="loading" class="loading" style="display: none;">
-            <div class="spinner"></div>
-            <p>Connexion en cours...</p>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h1 class="form-title">Connexion au Drive Privé</h1>
+            
+            <div id="errorAlert" class="alert alert-error"></div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Mot de passe</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
+            </form>
         </div>
     </div>
 
     <script>
-        const WORKER_URL = 'https://cloude-prive-alexandre.alexandre-lngls.workers.dev';
-        
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // Initialisation de Supabase
+        const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
+        const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}'; // Sera remplacé par le binding
+        const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+        // Gestion des erreurs
+        function showError(message) {
+            const errorAlert = document.getElementById('errorAlert');
+            errorAlert.textContent = message;
+            errorAlert.style.display = 'block';
+        }
+
+        // Vérification de la session existante
+        async function checkSession() {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (session) {
+                window.location.href = '/dashboard.html';
+            }
+        }
+
+        // Gestion de la connexion
+        async function handleLogin(event) {
+            event.preventDefault();
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('error-message');
-            const successMessage = document.getElementById('success-message');
-            const loading = document.getElementById('loading');
-            const form = document.getElementById('login-form');
-
-            // Masquer les messages et afficher le loading
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
-            form.style.display = 'none';
-            loading.style.display = 'flex';
-
+            
             try {
-                console.log('Tentative de connexion...');
-                
-                // Appel au Worker pour la connexion
-                const response = await fetch(`${WORKER_URL}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password }),
-                    credentials: 'include',
-                    mode: 'cors'
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
                 });
 
-                console.log('Réponse reçue:', response.status);
-                const data = await response.json();
-                console.log('Données reçues:', data);
+                if (error) throw error;
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Erreur de connexion');
-                }
-
-                if (!data.success) {
-                    throw new Error(data.error || 'Erreur de connexion');
-                }
-
-                // Afficher le message de succès
-                loading.style.display = 'none';
-                successMessage.style.display = 'block';
-                
-                console.log('Connexion réussie, redirection...');
-                
-                // Attendre un peu pour montrer le message de succès
-                setTimeout(() => {
-                    // Rediriger vers le dashboard avec le chemin complet
-                    window.location.href = `${window.location.origin}/dashboard.html`;
-                }, 1000);
-
+                // Redirection vers le dashboard en cas de succès
+                window.location.href = '/dashboard.html';
             } catch (error) {
-                console.error('Erreur de connexion:', error);
-                errorMessage.textContent = error.message;
-                errorMessage.style.display = 'block';
-                form.style.display = 'block';
-                loading.style.display = 'none';
+                showError('Erreur de connexion : ' + error.message);
             }
-        });
+        }
+
+        // Vérification de la session au chargement
+        document.addEventListener('DOMContentLoaded', checkSession);
     </script>
 </body>
 </html> 
