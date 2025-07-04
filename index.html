@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - Drive Privé</title>
     <link rel="stylesheet" href="style.css">
-    <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -34,12 +33,7 @@
     <script>
         // Initialisation de Supabase
         const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
-        const supabaseAnonKey = window.SUPABASE_CONFIG.ANON_KEY;
-
-        // Debug - Vérification de la clé
-        console.log('Clé actuelle:', supabaseAnonKey);
-        console.log('La clé est-elle remplacée ?', supabaseAnonKey !== '__SUPABASE_ANON_KEY__');
-
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk2NTc1NzAsImV4cCI6MjAyNTIzMzU3MH0.Pu_IiDPYi_Qz-Qj-Ij7_UZBXNhUXQBBVGbwxq_FTVtY';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
         // Gestion des erreurs
@@ -70,7 +64,6 @@
             const password = document.getElementById('password').value;
             
             try {
-                console.log('Tentative de connexion avec la clé:', supabaseAnonKey);
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email,
                     password
