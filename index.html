@@ -3,63 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Drive Privé</title>
+    <title>Drive Privé - Connexion 123</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
-        <div class="form-container">
-            <h1 class="form-title">Connexion au Drive Privé 2</h1>
-            
+        <div class="login-box">
+            <h1>Connexion</h1>
             <div id="errorAlert" class="alert alert-error"></div>
-            
+            <div id="successAlert" class="alert alert-success"></div>
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" id="email" class="form-input" required>
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required>
                 </div>
-                
                 <div class="form-group">
-                    <label for="password" class="form-label">Mot de passe</label>
-                    <input type="password" id="password" class="form-input" required>
+                    <label for="password">Mot de passe</label>
+                    <input type="password" id="password" required>
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
+                <button type="submit" class="btn btn-primary">Se connecter</button>
             </form>
         </div>
     </div>
 
     <script>
-        // Initialisation de Supabase
+        // Configuration
         const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M';
-
-        // Debug - Vérification de la clé
-        console.log('URL:', supabaseUrl);
-        console.log('Clé (premiers caractères):', supabaseAnonKey.substring(0, 20) + '...');
-        console.log('Longueur de la clé:', supabaseAnonKey.length);
-
+        const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}'; // Sera remplacé par le Worker
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-        // Gestion des erreurs
+        // Gestion des alertes
         function showError(message) {
-            const errorAlert = document.getElementById('errorAlert');
-            errorAlert.textContent = message;
-            errorAlert.style.display = 'block';
-            setTimeout(() => errorAlert.style.display = 'none', 5000);
+            const alert = document.getElementById('errorAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 5000);
         }
 
-        // Vérification de la session existante
-        async function checkSession() {
-            try {
-                const { data: { session }, error } = await supabaseClient.auth.getSession();
-                if (session) {
-                    window.location.href = '/dashboard.html';
-                }
-            } catch (error) {
-                console.error('Erreur lors de la vérification de la session:', error);
-            }
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 5000);
         }
 
         // Gestion de la connexion
@@ -68,7 +54,7 @@
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            
+
             try {
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email,
@@ -77,15 +63,22 @@
 
                 if (error) throw error;
 
-                // Redirection vers le dashboard en cas de succès
-                window.location.href = '/dashboard.html';
+                showSuccess('Connexion réussie !');
+                window.location.href = '/dashboard';
             } catch (error) {
-                console.error('Erreur de connexion:', error);
-                showError('Erreur de connexion : ' + (error.message || 'Identifiants invalides'));
+                showError('Erreur de connexion : ' + error.message);
             }
         }
 
-        // Vérification de la session au chargement
+        // Vérification de la session
+        async function checkSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                window.location.href = '/dashboard';
+            }
+        }
+
+        // Vérification au chargement
         document.addEventListener('DOMContentLoaded', checkSession);
     </script>
 </body>
