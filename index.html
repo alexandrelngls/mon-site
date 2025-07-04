@@ -28,9 +28,7 @@
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://nqrtrpsommuudwoakgcp.supabase.co';
         const WORKER_URL = 'https://cloude-prive-alexandre.alexandre-lngls.workers.dev';
-        const SITE_URL = 'https://alexandrelanglois.me';
         
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -47,24 +45,21 @@
             loading.style.display = 'flex';
 
             try {
-                // Appel à Supabase Auth
-                const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+                // Appel au Worker pour la connexion
+                const response = await fetch(`${WORKER_URL}/login`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': 'SUPABASE_ANON_KEY' // Sera remplacé par le binding
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
                 });
 
                 const data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(data.error_description || 'Erreur de connexion');
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Erreur de connexion');
                 }
-
-                // Stocker le token dans un cookie httpOnly via le Worker
-                document.cookie = `sb-token=${data.access_token}; path=/; secure; samesite=strict`;
 
                 // Rediriger vers le dashboard
                 window.location.href = '/dashboard.html';
