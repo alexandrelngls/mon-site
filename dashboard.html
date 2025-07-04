@@ -30,7 +30,7 @@
         // Configuration
         const WORKER_URL = 'https://cloude-prive-alexandre.alexandre-lngls.workers.dev';
         const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M';
+        const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}'; // Sera remplacé par le Worker
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
         // Gestion des alertes
