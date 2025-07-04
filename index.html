@@ -10,6 +10,7 @@
     <div class="login-container">
         <h1>Cloud Personnel</h1>
         <div id="error-message" class="error-message" style="display: none;"></div>
+        <div id="success-message" class="success-message" style="display: none;">Connexion réussie ! Redirection...</div>
         <form id="login-form" class="login-form">
             <div class="form-group">
                 <label for="email">Email</label>
@@ -36,15 +37,19 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
             const loading = document.getElementById('loading');
             const form = document.getElementById('login-form');
 
-            // Masquer le message d'erreur et afficher le loading
+            // Masquer les messages et afficher le loading
             errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
             form.style.display = 'none';
             loading.style.display = 'flex';
 
             try {
+                console.log('Tentative de connexion...');
+                
                 // Appel au Worker pour la connexion
                 const response = await fetch(`${WORKER_URL}/login`, {
                     method: 'POST',
@@ -56,18 +61,30 @@
                     mode: 'cors'
                 });
 
+                console.log('Réponse reçue:', response.status);
+                const data = await response.json();
+                console.log('Données reçues:', data);
+
                 if (!response.ok) {
-                    const data = await response.json();
                     throw new Error(data.error || 'Erreur de connexion');
                 }
 
-                const data = await response.json();
                 if (!data.success) {
                     throw new Error(data.error || 'Erreur de connexion');
                 }
 
-                // Rediriger vers le dashboard
-                window.location.href = '/dashboard.html';
+                // Afficher le message de succès
+                loading.style.display = 'none';
+                successMessage.style.display = 'block';
+                
+                console.log('Connexion réussie, redirection...');
+                
+                // Attendre un peu pour montrer le message de succès
+                setTimeout(() => {
+                    // Rediriger vers le dashboard avec le chemin complet
+                    window.location.href = `${window.location.origin}/dashboard.html`;
+                }, 1000);
+
             } catch (error) {
                 console.error('Erreur de connexion:', error);
                 errorMessage.textContent = error.message;
