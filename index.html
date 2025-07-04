@@ -10,7 +10,7 @@
 <body>
     <div class="container">
         <div class="form-container">
-            <h1 class="form-title">Connexion au Drive Privé 1</h1>
+            <h1 class="form-title">Connexion au Drive Privé 2</h1>
             
             <div id="errorAlert" class="alert alert-error"></div>
             
@@ -33,7 +33,13 @@
     <script>
         // Initialisation de Supabase
         const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk2NTc1NzAsImV4cCI6MjAyNTIzMzU3MH0.Pu_IiDPYi_Qz-Qj-Ij7_UZBXNhUXQBBVGbwxq_FTVtY';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xcnRycHNvbW11dWR3b2FrZ2NwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTExMzMwODEsImV4cCI6MjA2NjcwOTA4MX0.lS2nRqBAlUdV-B9-5Amjn31p_cO7M0jzj9YZ2_v8b3M';
+
+        // Debug - Vérification de la clé
+        console.log('URL:', supabaseUrl);
+        console.log('Clé (premiers caractères):', supabaseAnonKey.substring(0, 20) + '...');
+        console.log('Longueur de la clé:', supabaseAnonKey.length);
+
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
         // Gestion des erreurs
