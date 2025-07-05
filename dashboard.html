@@ -152,6 +152,23 @@
             uploadButton.parentNode.appendChild(fileInput);
             uploadButton.addEventListener('click', () => fileInput.click());
 
+            // Initialisation du drag & drop sur la zone de contenu
+            const filesGrid = document.getElementById('filesGrid');
+            filesGrid.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            });
+
+            filesGrid.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                
+                // Si c'est un upload de fichiers externes
+                if (e.dataTransfer.files.length > 0) {
+                    const event = { target: { files: e.dataTransfer.files } };
+                    await handleFileSelect(event);
+                }
+            });
+
             // Chargement initial des fichiers
             await loadFiles();
         });
@@ -450,31 +467,6 @@
         }
 
         // Gestion du drag & drop
-        const uploadZone = document.getElementById('uploadZone');
-
-        uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadZone.style.borderColor = 'var(--primary-color)';
-        });
-
-        uploadZone.addEventListener('dragleave', () => {
-            uploadZone.style.borderColor = 'var(--border-color)';
-        });
-
-        uploadZone.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            uploadZone.style.borderColor = 'var(--border-color)';
-            
-            const dt = e.dataTransfer;
-            const files = dt.files;
-
-            if (files.length) {
-                const event = { target: { files } };
-                await handleFileSelect(event);
-            }
-        });
-
-        // Gestion du drag & drop pour le déplacement des fichiers
         function handleDragStart(e, item) {
             draggedItem = item;
             e.target.classList.add('dragging');
