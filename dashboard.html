@@ -28,8 +28,8 @@
 
     <script>
         // Configuration
-        const WORKER_URL = 'https://cloude-prive-alexandre.alexandre-lngls.workers.dev';
-        const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
+        const WORKER_URL = 'https://alexandrelanglois.me';
+        const supabaseUrl = '{{SUPABASE_PROJECT_URL}}';
         const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
@@ -144,6 +144,22 @@
 
             const files = event.target.files;
             if (!files.length) return;
+
+            // Vérification des types de fichiers
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'];
+            const invalidFiles = Array.from(files).filter(file => !allowedTypes.includes(file.type));
+            if (invalidFiles.length > 0) {
+                showError(`Types de fichiers non autorisés : ${invalidFiles.map(f => f.name).join(', ')}`);
+                return;
+            }
+
+            // Vérification de la taille
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const oversizedFiles = Array.from(files).filter(file => file.size > maxSize);
+            if (oversizedFiles.length > 0) {
+                showError(`Fichiers trop volumineux (max 10MB) : ${oversizedFiles.map(f => f.name).join(', ')}`);
+                return;
+            }
 
             toggleSpinner(true);
 
