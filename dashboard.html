@@ -5,36 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drive Privé - Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .empty-message {
-            text-align: center;
-            padding: 2rem;
-            color: #666;
-            font-size: 1.1rem;
-            background: #f5f5f5;
-            border-radius: 8px;
-            margin: 1rem 0;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="dashboard-header">
-            <h1>Mon Drive Privé</h1>
-            <button onclick="handleLogout()" class="btn btn-primary">Déconnexion</button>
-        </div>
-
-        <div id="errorAlert" class="alert alert-error"></div>
-        <div id="successAlert" class="alert alert-success"></div>
-
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-            <p>Cliquez ou glissez des fichiers ici pour les uploader</p>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                <span class="mdi mdi-plus"></span>
+                Nouveau
+            </button>
             <input type="file" id="fileInput" style="display: none" multiple onchange="handleFileSelect(event)">
         </div>
 
-        <div id="spinner" class="spinner"></div>
-        <div id="filesGrid" class="files-grid"></div>
+        <div class="main-content">
+            <div class="breadcrumb" id="breadcrumb"></div>
+            
+            <div class="action-buttons">
+                <button class="btn" onclick="createFolder()">
+                    <span class="mdi mdi-folder-plus"></span>
+                    Nouveau dossier
+                </button>
+            </div>
+
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                <span class="mdi mdi-upload" style="font-size: 48px; color: var(--folder-color)"></span>
+                <p>Glissez des fichiers ici ou cliquez pour uploader</p>
+            </div>
+
+            <div id="spinner" class="spinner"></div>
+            <div id="filesGrid" class="files-grid"></div>
+        </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu" style="display: none;">
+        <div class="context-menu-item" onclick="handleContextMenu('open')">
+            <span class="mdi mdi-open-in-new"></span>
+            Ouvrir
+        </div>
+        <div class="context-menu-item" onclick="handleContextMenu('rename')">
+            <span class="mdi mdi-pencil"></span>
+            Renommer
+        </div>
+        <div class="context-menu-item" onclick="handleContextMenu('move')">
+            <span class="mdi mdi-folder-move"></span>
+            Déplacer
+        </div>
+        <div class="context-menu-item" onclick="handleContextMenu('delete')">
+            <span class="mdi mdi-delete"></span>
+            Supprimer
+        </div>
     </div>
 
     <script>
@@ -44,7 +64,11 @@
         const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}';
         const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-        // Gestion des alertes
+        // État global
+        let currentPath = '';
+        let selectedItem = null;
+
+        // Gestion des alertes et du spinner
         function showError(message) {
             const alert = document.getElementById('errorAlert');
             alert.textContent = message;
@@ -59,109 +83,190 @@
             setTimeout(() => alert.style.display = 'none', 5000);
         }
 
-        // Gestion du spinner
         function toggleSpinner(show) {
             document.getElementById('spinner').style.display = show ? 'block' : 'none';
         }
 
-        // Vérification de l'authentification
-        async function checkAuth() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                window.location.href = '/';
-                return null;
-            }
-            return session.access_token;
+        // Navigation et affichage
+        function updateBreadcrumb() {
+            const breadcrumb = document.getElementById('breadcrumb');
+            const parts = currentPath.split('/').filter(p => p);
+            
+            let html = `
+                <div class="breadcrumb-item" onclick="navigateTo('')">
+                    <span class="mdi mdi-home"></span>
+                    Mon Drive
+                </div>
+            `;
+
+            let path = '';
+            parts.forEach((part, index) => {
+                path += '/' + part;
+                html += `
+                    <span class="breadcrumb-separator">/</span>
+                    <div class="breadcrumb-item" onclick="navigateTo('${path}')">
+                        ${part}
+                    </div>
+                `;
+            });
+
+            breadcrumb.innerHTML = html;
         }
 
-        // Déconnexion
-        async function handleLogout() {
-            await supabase.auth.signOut();
-            window.location.href = '/';
+        async function navigateTo(path) {
+            currentPath = path;
+            updateBreadcrumb();
+            await loadFiles();
         }
 
-        // Chargement des fichiers
+        // Gestion des fichiers
         async function loadFiles() {
             const token = await checkAuth();
             if (!token) return;
 
             toggleSpinner(true);
             try {
-                const response = await fetch(`${WORKER_URL}/list-files`, {
+                const response = await fetch(`${WORKER_URL}/list-files?path=${encodeURIComponent(currentPath)}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (response.status === 500) {
-                    throw new Error('Erreur serveur : problème lors de la récupération des fichiers');
-                }
-
                 if (!response.ok) {
                     throw new Error('Erreur lors du chargement des fichiers');
                 }
 
-                const files = await response.json();
-                displayFiles(files);
+                const items = await response.json();
+                displayFiles(items);
             } catch (error) {
-                if (error.message === 'Failed to fetch') {
-                    showError('Impossible de se connecter au serveur');
-                } else {
-                    showError(error.message);
-                }
+                showError(error.message);
             } finally {
                 toggleSpinner(false);
             }
         }
 
-        // Affichage des fichiers
-        function displayFiles(files) {
+        function displayFiles(items) {
             const grid = document.getElementById('filesGrid');
             grid.innerHTML = '';
 
-            if (!files || files.length === 0) {
-                const emptyMessage = document.createElement('div');
-                emptyMessage.className = 'empty-message';
-                emptyMessage.textContent = 'Aucun fichier dans votre drive. Commencez par uploader des fichiers !';
-                grid.appendChild(emptyMessage);
+            if (!items || items.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-message">
+                        <span class="mdi mdi-folder-open" style="font-size: 48px;"></span>
+                        <p>Ce dossier est vide</p>
+                    </div>
+                `;
                 return;
             }
 
-            files.forEach(file => {
+            items.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'file-card';
+                card.onclick = () => handleItemClick(item);
+                card.oncontextmenu = (e) => showContextMenu(e, item);
 
-                const preview = document.createElement('div');
-                preview.className = 'file-preview';
+                const icon = document.createElement('div');
+                icon.className = 'file-icon';
                 
-                if (file.isImage) {
-                    const img = document.createElement('img');
-                    img.src = file.url;
-                    img.alt = file.name;
-                    preview.appendChild(img);
+                if (item.isFolder) {
+                    icon.innerHTML = '<span class="mdi mdi-folder"></span>';
+                } else if (item.isImage) {
+                    icon.innerHTML = '<span class="mdi mdi-image"></span>';
                 } else {
-                    preview.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>';
+                    icon.innerHTML = '<span class="mdi mdi-file"></span>';
                 }
 
                 const name = document.createElement('div');
                 name.className = 'file-name';
-                name.textContent = file.name;
+                name.textContent = item.name;
 
-                const actions = document.createElement('div');
-                actions.className = 'file-actions';
-
-                const downloadBtn = document.createElement('a');
-                downloadBtn.href = file.url;
-                downloadBtn.className = 'btn btn-primary';
-                downloadBtn.textContent = 'Télécharger';
-                downloadBtn.download = file.name;
-
-                actions.appendChild(downloadBtn);
-                card.appendChild(preview);
+                card.appendChild(icon);
                 card.appendChild(name);
-                card.appendChild(actions);
                 grid.appendChild(card);
             });
+        }
+
+        // Actions sur les fichiers
+        function handleItemClick(item) {
+            if (item.isFolder) {
+                navigateTo(item.path);
+            } else {
+                window.open(item.url, '_blank');
+            }
+        }
+
+        function showContextMenu(event, item) {
+            event.preventDefault();
+            selectedItem = item;
+            
+            const menu = document.getElementById('contextMenu');
+            menu.style.display = 'block';
+            menu.style.left = `${event.pageX}px`;
+            menu.style.top = `${event.pageY}px`;
+
+            // Cacher le menu si on clique ailleurs
+            document.addEventListener('click', hideContextMenu);
+        }
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+            document.removeEventListener('click', hideContextMenu);
+        }
+
+        async function handleContextMenu(action) {
+            if (!selectedItem) return;
+
+            switch (action) {
+                case 'open':
+                    handleItemClick(selectedItem);
+                    break;
+                case 'rename':
+                    const newName = prompt('Nouveau nom :', selectedItem.name);
+                    if (newName) {
+                        await renameItem(selectedItem, newName);
+                    }
+                    break;
+                case 'move':
+                    // TODO: Implémenter le déplacement
+                    break;
+                case 'delete':
+                    if (confirm(`Voulez-vous vraiment supprimer ${selectedItem.name} ?`)) {
+                        await deleteItem(selectedItem);
+                    }
+                    break;
+            }
+
+            hideContextMenu();
+        }
+
+        async function createFolder() {
+            const name = prompt('Nom du nouveau dossier :');
+            if (!name) return;
+
+            const token = await checkAuth();
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${WORKER_URL}/create-folder`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        path: `${currentPath}/${name}`
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la création du dossier');
+                }
+
+                showSuccess('Dossier créé avec succès');
+                await loadFiles();
+            } catch (error) {
+                showError(error.message);
+            }
         }
 
         // Upload de fichiers
@@ -172,29 +277,14 @@
             const files = event.target.files;
             if (!files.length) return;
 
-            // Vérification des types de fichiers
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain'];
-            const invalidFiles = Array.from(files).filter(file => !allowedTypes.includes(file.type));
-            if (invalidFiles.length > 0) {
-                showError(`Types de fichiers non autorisés : ${invalidFiles.map(f => f.name).join(', ')}`);
-                return;
-            }
-
-            // Vérification de la taille
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            const oversizedFiles = Array.from(files).filter(file => file.size > maxSize);
-            if (oversizedFiles.length > 0) {
-                showError(`Fichiers trop volumineux (max 10MB) : ${oversizedFiles.map(f => f.name).join(', ')}`);
-                return;
-            }
-
             toggleSpinner(true);
 
             for (const file of files) {
-                const formData = new FormData();
-                formData.append('file', file);
-
                 try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('path', currentPath);
+
                     const response = await fetch(`${WORKER_URL}/upload-file`, {
                         method: 'POST',
                         headers: {
@@ -214,7 +304,7 @@
             }
 
             toggleSpinner(false);
-            loadFiles();
+            await loadFiles();
             event.target.value = '';
         }
 
@@ -243,13 +333,29 @@
             }
         });
 
-        // Vérification initiale et chargement des fichiers
+        // Initialisation
         document.addEventListener('DOMContentLoaded', async () => {
             const token = await checkAuth();
             if (token) {
-                loadFiles();
+                updateBreadcrumb();
+                await loadFiles();
             }
         });
+
+        // Authentification
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                window.location.href = '/';
+                return null;
+            }
+            return session.access_token;
+        }
+
+        async function handleLogout() {
+            await supabase.auth.signOut();
+            window.location.href = '/';
+        }
     </script>
 </body>
 </html> 
