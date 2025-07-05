@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drive Privé - Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .empty-message {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            font-size: 1.1rem;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -89,7 +100,11 @@
                 const files = await response.json();
                 displayFiles(files);
             } catch (error) {
-                showError(error.message);
+                if (error.message === 'Failed to fetch') {
+                    showError('Impossible de se connecter au serveur');
+                } else {
+                    showError(error.message);
+                }
             } finally {
                 toggleSpinner(false);
             }
@@ -99,6 +114,14 @@
         function displayFiles(files) {
             const grid = document.getElementById('filesGrid');
             grid.innerHTML = '';
+
+            if (!files || files.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-message';
+                emptyMessage.textContent = 'Aucun fichier dans votre drive. Commencez par uploader des fichiers !';
+                grid.appendChild(emptyMessage);
+                return;
+            }
 
             files.forEach(file => {
                 const card = document.createElement('div');
