@@ -2,60 +2,123 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drive Privé - Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mon Drive - Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Styles pour les notifications */
+        #notificationContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notification {
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+            max-width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification.success {
+            background-color: var(--success-color);
+        }
+
+        .notification.error {
+            background-color: var(--error-color);
+        }
+
+        .notification.info {
+            background-color: var(--info-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="sidebar">
-            <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
-                <span class="mdi mdi-plus"></span>
-                Nouveau
-            </button>
-            <input type="file" id="fileInput" style="display: none" multiple onchange="handleFileSelect(event)">
-        </div>
-
-        <div class="main-content">
-            <div class="breadcrumb" id="breadcrumb"></div>
-            
-            <div class="action-buttons">
-                <button class="btn" onclick="createFolder()">
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <h1 class="header-title">Mon Drive</h1>
+                <nav id="breadcrumb" class="breadcrumb" role="navigation" aria-label="Fil d'Ariane">
+                    <!-- Le fil d'Ariane sera rempli dynamiquement -->
+                </nav>
+            </div>
+            <div class="header-actions">
+                <button id="uploadButton" class="button primary" aria-label="Télécharger des fichiers">
+                    <span class="mdi mdi-upload"></span>
+                    <span class="button-text">Télécharger</span>
+                </button>
+                <button id="createFolderButton" class="button secondary" aria-label="Créer un dossier">
                     <span class="mdi mdi-folder-plus"></span>
-                    Nouveau dossier
+                    <span class="button-text">Nouveau dossier</span>
                 </button>
             </div>
+        </header>
 
-            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-                <span class="mdi mdi-upload" style="font-size: 48px; color: var(--folder-color)"></span>
-                <p>Glissez des fichiers ici ou cliquez pour uploader</p>
+        <main class="content">
+            <div id="filesGrid" class="files-grid" role="grid" aria-label="Liste des fichiers et dossiers">
+                <!-- La grille sera remplie dynamiquement -->
             </div>
 
-            <div id="spinner" class="spinner"></div>
-            <div id="filesGrid" class="files-grid"></div>
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <span class="mdi mdi-folder-open"></span>
+                <p>Ce dossier est vide</p>
+            </div>
+
+            <div id="spinner" class="spinner-overlay" style="display: none;">
+                <div class="spinner"></div>
+            </div>
+        </main>
+
+        <div id="contextMenu" class="context-menu" style="display: none;">
+            <div class="context-menu-item" data-action="rename">
+                <span class="mdi mdi-pencil"></span>
+                <span>Renommer</span>
+            </div>
+            <div class="context-menu-item" data-action="delete">
+                <span class="mdi mdi-delete"></span>
+                <span>Supprimer</span>
+            </div>
+            <div class="context-menu-item" data-action="download">
+                <span class="mdi mdi-download"></span>
+                <span>Télécharger</span>
+            </div>
         </div>
     </div>
 
-    <div id="contextMenu" class="context-menu" style="display: none;">
-        <div class="context-menu-item" onclick="handleContextMenu('open')">
-            <span class="mdi mdi-open-in-new"></span>
-            Ouvrir
-        </div>
-        <div class="context-menu-item" onclick="handleContextMenu('rename')">
-            <span class="mdi mdi-pencil"></span>
-            Renommer
-        </div>
-        <div class="context-menu-item" onclick="handleContextMenu('move')">
-            <span class="mdi mdi-folder-move"></span>
-            Déplacer
-        </div>
-        <div class="context-menu-item" onclick="handleContextMenu('delete')">
-            <span class="mdi mdi-delete"></span>
-            Supprimer
-        </div>
-    </div>
+    <div id="notificationContainer"></div>
 
     <script>
         // Configuration
@@ -67,24 +130,91 @@
         // État global
         let currentPath = '';
         let selectedItem = null;
+        let draggedItem = null;
 
-        // Gestion des alertes et du spinner
+        // Initialisation des éléments
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialisation des boutons
+            document.getElementById('createFolderButton').addEventListener('click', createFolder);
+            
+            // Initialisation du menu contextuel
+            document.querySelectorAll('.context-menu-item').forEach(item => {
+                item.addEventListener('click', () => handleContextMenu(item.dataset.action));
+            });
+
+            // Initialisation du bouton d'upload
+            const uploadButton = document.getElementById('uploadButton');
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.multiple = true;
+            fileInput.style.display = 'none';
+            fileInput.addEventListener('change', handleFileSelect);
+            uploadButton.parentNode.appendChild(fileInput);
+            uploadButton.addEventListener('click', () => fileInput.click());
+
+            // Chargement initial des fichiers
+            await loadFiles();
+        });
+
+        // Système de notifications amélioré
+        function showNotification(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+
+            // Icône en fonction du type
+            let icon = '';
+            switch (type) {
+                case 'success':
+                    icon = '<span class="mdi mdi-check-circle"></span>';
+                    break;
+                case 'error':
+                    icon = '<span class="mdi mdi-alert-circle"></span>';
+                    break;
+                default:
+                    icon = '<span class="mdi mdi-information"></span>';
+            }
+
+            notification.innerHTML = `
+                ${icon}
+                <span>${message}</span>
+            `;
+
+            container.appendChild(notification);
+
+            // Animation de sortie
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 300);
+            }, duration);
+        }
+
+        // Remplacer les anciennes fonctions d'alerte
         function showError(message) {
-            const alert = document.getElementById('errorAlert');
-            alert.textContent = message;
-            alert.style.display = 'block';
-            setTimeout(() => alert.style.display = 'none', 5000);
+            showNotification(message, 'error');
         }
 
         function showSuccess(message) {
-            const alert = document.getElementById('successAlert');
-            alert.textContent = message;
-            alert.style.display = 'block';
-            setTimeout(() => alert.style.display = 'none', 5000);
+            showNotification(message, 'success');
         }
 
-        function toggleSpinner(show) {
-            document.getElementById('spinner').style.display = show ? 'block' : 'none';
+        function showInfo(message) {
+            showNotification(message, 'info');
+        }
+
+        // Amélioration de la gestion du chargement
+        function toggleSpinner(show, message = '') {
+            const spinner = document.getElementById('spinner');
+            if (show) {
+                spinner.style.display = 'flex';
+                if (message) {
+                    showInfo(message);
+                }
+            } else {
+                spinner.style.display = 'none';
+            }
         }
 
         // Navigation et affichage
@@ -164,6 +294,14 @@
                 card.className = 'file-card';
                 card.onclick = () => handleItemClick(item);
                 card.oncontextmenu = (e) => showContextMenu(e, item);
+                
+                // Ajout des attributs pour le drag & drop
+                card.draggable = true;
+                card.ondragstart = (e) => handleDragStart(e, item);
+                card.ondragover = (e) => handleDragOver(e);
+                card.ondrop = (e) => handleDrop(e, item);
+                card.ondragenter = (e) => handleDragEnter(e);
+                card.ondragleave = (e) => handleDragLeave(e);
 
                 const icon = document.createElement('div');
                 icon.className = 'file-icon';
@@ -240,13 +378,14 @@
         }
 
         async function createFolder() {
-            const name = prompt('Nom du nouveau dossier :');
-            if (!name) return;
+            const folderName = prompt('Nom du dossier :');
+            if (!folderName) return;
 
-            const token = await checkAuth();
-            if (!token) return;
-
+            toggleSpinner(true, 'Création du dossier...');
             try {
+                const token = await checkAuth();
+                if (!token) return;
+
                 const response = await fetch(`${WORKER_URL}/create-folder`, {
                     method: 'POST',
                     headers: {
@@ -254,7 +393,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        path: `${currentPath}/${name}`
+                        path: `${currentPath}/${folderName}`
                     })
                 });
 
@@ -265,7 +404,9 @@
                 showSuccess('Dossier créé avec succès');
                 await loadFiles();
             } catch (error) {
-                showError(error.message);
+                showError(`Erreur lors de la création du dossier : ${error.message}`);
+            } finally {
+                toggleSpinner(false);
             }
         }
 
@@ -277,7 +418,7 @@
             const files = event.target.files;
             if (!files.length) return;
 
-            toggleSpinner(true);
+            toggleSpinner(true, 'Téléchargement en cours...');
 
             for (const file of files) {
                 try {
@@ -299,7 +440,7 @@
 
                     showSuccess(`${file.name} uploadé avec succès`);
                 } catch (error) {
-                    showError(error.message);
+                    showError(`Erreur lors du téléchargement : ${error.message}`);
                 }
             }
 
@@ -333,14 +474,83 @@
             }
         });
 
-        // Initialisation
-        document.addEventListener('DOMContentLoaded', async () => {
-            const token = await checkAuth();
-            if (token) {
-                updateBreadcrumb();
-                await loadFiles();
+        // Gestion du drag & drop pour le déplacement des fichiers
+        function handleDragStart(e, item) {
+            draggedItem = item;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDragEnter(e) {
+            const card = e.target.closest('.file-card');
+            if (card) {
+                card.classList.add('drag-over');
             }
-        });
+        }
+
+        function handleDragLeave(e) {
+            const card = e.target.closest('.file-card');
+            if (card) {
+                card.classList.remove('drag-over');
+            }
+        }
+
+        async function handleDrop(e, targetItem) {
+            e.preventDefault();
+            const card = e.target.closest('.file-card');
+            if (card) {
+                card.classList.remove('drag-over');
+            }
+
+            if (!draggedItem || !targetItem || draggedItem === targetItem) {
+                return;
+            }
+
+            // On ne peut déposer que dans un dossier
+            if (!targetItem.isFolder) {
+                showError('Vous ne pouvez déplacer un élément que dans un dossier');
+                return;
+            }
+
+            try {
+                await moveItem(draggedItem, targetItem.path);
+                showSuccess(`${draggedItem.name} déplacé avec succès`);
+                await loadFiles();
+            } catch (error) {
+                showError(`Erreur lors du déplacement : ${error.message}`);
+            }
+
+            draggedItem = null;
+        }
+
+        // Déplacement d'un fichier ou dossier
+        async function moveItem(item, newPath) {
+            const token = await checkAuth();
+            if (!token) return;
+
+            const response = await fetch(`${WORKER_URL}/move`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sourcePath: item.path,
+                    destinationPath: `${newPath}/${item.name}`,
+                    isFolder: item.isFolder
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Erreur lors du déplacement');
+            }
+        }
 
         // Authentification
         async function checkAuth() {
