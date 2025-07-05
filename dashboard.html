@@ -93,6 +93,10 @@
                     }
                 });
 
+                if (response.status === 500) {
+                    throw new Error('Erreur serveur : problème lors de la récupération des fichiers');
+                }
+
                 if (!response.ok) {
                     throw new Error('Erreur lors du chargement des fichiers');
                 }
