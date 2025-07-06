@@ -27,8 +27,21 @@
     </div>
 
     <script>
+        // Fonction de logging côté client
+        function logClient(type, message, data = null) {
+            const logEntry = {
+                type,
+                timestamp: new Date().toISOString(),
+                message,
+                data
+            };
+            console.log('Client Log:', logEntry);
+            return logEntry;
+        }
+
         // Gestion des alertes
         function showError(message) {
+            logClient('error', message);
             const alert = document.getElementById('errorAlert');
             alert.textContent = message;
             alert.style.display = 'block';
@@ -36,6 +49,7 @@
         }
 
         function showSuccess(message) {
+            logClient('success', message);
             const alert = document.getElementById('successAlert');
             alert.textContent = message;
             alert.style.display = 'block';
@@ -49,6 +63,8 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
+            logClient('auth_attempt', 'Tentative de connexion', { email });
+
             try {
                 const response = await fetch('/auth/login', {
                     method: 'POST',
@@ -56,34 +72,50 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        email: email,
-                        password: password
+                        email,
+                        password
                     })
                 });
 
                 const data = await response.json();
+                
+                logClient('auth_response', 'Réponse reçue', {
+                    status: response.status,
+                    ok: response.ok,
+                    error: data.error
+                });
 
-                if (!response.ok) throw new Error(data.error || 'Erreur de connexion');
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erreur de connexion');
+                }
 
                 showSuccess('Connexion réussie !');
+                logClient('auth_success', 'Redirection vers le dashboard');
                 window.location.href = '/dashboard';
             } catch (error) {
-                console.error('Erreur de connexion:', error.message);
-                showError('Erreur de connexion : ' + error.message);
+                logClient('auth_error', 'Erreur lors de la connexion', { error: error.message });
+                showError(error.message);
             }
         }
 
-        // Vérification de la session existante
+        // Vérification de la session au chargement
         async function checkSession() {
             try {
+                logClient('session_check', 'Vérification de la session');
                 const response = await fetch('/auth/session');
                 const data = await response.json();
                 
+                logClient('session_response', 'Réponse de la vérification de session', {
+                    has_session: !!data.session
+                });
+
                 if (data.session) {
                     window.location.href = '/dashboard';
                 }
             } catch (error) {
-                console.error('Erreur de vérification de session:', error);
+                logClient('session_error', 'Erreur lors de la vérification de session', {
+                    error: error.message
+                });
             }
         }
 
