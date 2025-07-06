@@ -87,6 +87,9 @@
             </div>
         </header>
 
+        <div id="errorAlert" class="alert alert-error"></div>
+        <div id="successAlert" class="alert alert-success"></div>
+
         <main class="content">
             <div id="filesGrid" class="files-grid" role="grid" aria-label="Liste des fichiers et dossiers">
                 <!-- La grille sera remplie dynamiquement -->
@@ -279,14 +282,21 @@
                     }
                 });
 
+                const data = await response.json();
+
                 if (!response.ok) {
-                    throw new Error('Erreur lors du chargement des fichiers');
+                    throw new Error(data.error || 'Erreur lors du chargement des fichiers');
                 }
 
-                const items = await response.json();
-                displayFiles(items);
+                if (!Array.isArray(data)) {
+                    throw new Error('Format de données invalide');
+                }
+
+                displayFiles(data);
             } catch (error) {
-                showError(error.message);
+                console.error('Erreur loadFiles:', error);
+                showError(`Erreur lors du chargement des fichiers : ${error.message}`);
+                displayFiles([]); // Affiche un dossier vide en cas d'erreur
             } finally {
                 toggleSpinner(false);
             }
@@ -558,6 +568,67 @@
             await supabase.auth.signOut();
             window.location.href = '/';
         }
+
+        // Fonction de logging côté client
+        function logClient(type, message, data = null) {
+            const logEntry = {
+                type,
+                timestamp: new Date().toISOString(),
+                message,
+                data
+            };
+            console.log('Client Log:', logEntry);
+            return logEntry;
+        }
+
+        // Gestion des alertes
+        function showError(message) {
+            logClient('error', message);
+            const alert = document.getElementById('errorAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+
+        function showSuccess(message) {
+            logClient('success', message);
+            const alert = document.getElementById('successAlert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+
+        // Vérification de la session et chargement des données utilisateur
+        async function checkSession() {
+            try {
+                logClient('session_check', 'Vérification de la session dans le dashboard');
+                const response = await fetch('/auth/session');
+                const data = await response.json();
+
+                logClient('session_response', 'Réponse de la vérification de session', {
+                    has_session: !!data.session
+                });
+
+                if (!data.session) {
+                    logClient('session_invalid', 'Session invalide, redirection vers la page de connexion');
+                    window.location.href = '/';
+                    return;
+                }
+
+                // Affichage des informations utilisateur
+                document.getElementById('userEmail').textContent = data.session.user.email;
+                logClient('user_info_loaded', 'Informations utilisateur chargées');
+
+            } catch (error) {
+                logClient('session_error', 'Erreur lors de la vérification de session', {
+                    error: error.message
+                });
+                window.location.href = '/';
+            }
+        }
+
+        // Vérification au chargement
+        document.addEventListener('DOMContentLoaded', checkSession);
     </script>
 </body>
 </html> 
