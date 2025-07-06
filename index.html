@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drive Privé - Connexion</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
@@ -28,13 +27,6 @@
     </div>
 
     <script>
-        // Configuration de Supabase
-        const supabaseUrl = 'https://nqrtrpsommuudwoakgcp.supabase.co';
-        const supabaseAnonKey = '{{SUPABASE_ANON_KEY}}';
-
-        // Initialisation du client Supabase
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-
         // Gestion des alertes
         function showError(message) {
             const alert = document.getElementById('errorAlert');
@@ -58,12 +50,20 @@
             const password = document.getElementById('password').value;
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
                 });
 
-                if (error) throw error;
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Erreur de connexion');
 
                 showSuccess('Connexion réussie !');
                 window.location.href = '/dashboard';
@@ -75,9 +75,15 @@
 
         // Vérification de la session existante
         async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                window.location.href = '/dashboard';
+            try {
+                const response = await fetch('/auth/session');
+                const data = await response.json();
+                
+                if (data.session) {
+                    window.location.href = '/dashboard';
+                }
+            } catch (error) {
+                console.error('Erreur de vérification de session:', error);
             }
         }
 
